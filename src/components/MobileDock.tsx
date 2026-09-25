@@ -182,7 +182,7 @@ export default function MobileDock({
                 <ChevronUp size={17} />
                 {sel.upgradeCost === null
                   ? 'به نهایت رسیده'
-                  : `${sel.isAscend ? `فرااوج ★${fa(sel.ascend + 1)}` : 'ارتقای برج'} · ${fa(sel.upgradeCost)} طلا`}
+                  : `${sel.isAscend ? (sel.ascend + 1 > 5 ? `قدرتِ افسانه‌ای ★${fa(sel.ascend + 1)}` : `فرااوج ★${fa(sel.ascend + 1)}`) : 'ارتقای برج'} · ${fa(sel.upgradeCost)} طلا`}
               </button>
               <button
                 type="button"

@@ -16,4 +16,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  build: {
+    // Inline every imported image as a data: URL so `dist/index.html` is one
+    // truly self-contained file (open it anywhere, no assets folder needed).
+    assetsInlineLimit: 100_000_000,
+    chunkSizeWarningLimit: 20_000,
+  },
 });

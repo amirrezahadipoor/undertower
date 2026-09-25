@@ -1,3 +1,4 @@
+import coreImg from '../assets/core.png';
 import { useMemo } from 'react';
 import {
   Activity,
@@ -80,7 +81,7 @@ export function TopBar({ hud, muted, livesKey, locked, onSpeed, onTogglePause, o
     >
       {/* left: wave + act */}
       <div className="flex min-w-0 items-center gap-1 sm:gap-3">
-        <img src="/assets/core.png" alt="" className="pix anim-heart hidden h-7 w-7 object-contain sm:block" draggable={false} />
+        <img src={coreImg} alt="" className="pix anim-heart hidden h-7 w-7 object-contain sm:block" draggable={false} />
         <div className="leading-tight">
           <div className="whitespace-nowrap text-[12px] font-black text-slate-100 sm:text-sm">
             موج {fa(hud.wave)}

@@ -1,3 +1,9 @@
+import nebuImg from '../assets/nebu.png';
+import nebuSoftImg from '../assets/nebu-soft.png';
+import kingImg from '../assets/king.png';
+import coreImg from '../assets/core.png';
+import sageImg from '../assets/sage.png';
+
 export type Speaker = 'nebu' | 'soft' | 'king' | 'narr' | 'core' | 'sage';
 
 export interface ScriptLine {
@@ -6,12 +12,12 @@ export interface ScriptLine {
 }
 
 export const SPEAKERS: Record<Speaker, { name: string; color: string; img: string | null; blip: number }> = {
-  nebu: { name: 'نیبو', color: '#67e8f9', img: '/assets/nebu.png', blip: 520 },
-  soft: { name: 'نیبو', color: '#a5f3fc', img: '/assets/nebu-soft.png', blip: 440 },
-  king: { name: 'پادشاهِ خاموشی', color: '#c084fc', img: '/assets/king.png', blip: 150 },
+  nebu: { name: 'نیبو', color: '#67e8f9', img: nebuImg, blip: 520 },
+  soft: { name: 'نیبو', color: '#a5f3fc', img: nebuSoftImg, blip: 440 },
+  king: { name: 'پادشاهِ خاموشی', color: '#c084fc', img: kingImg, blip: 150 },
   narr: { name: '', color: '#e2e8f0', img: null, blip: 340 },
-  core: { name: 'قلب', color: '#5eead4', img: '/assets/core.png', blip: 720 },
-  sage: { name: 'سالگرد', color: '#fbbf24', img: '/assets/sage.png', blip: 380 },
+  core: { name: 'قلب', color: '#5eead4', img: coreImg, blip: 720 },
+  sage: { name: 'سالگرد', color: '#fbbf24', img: sageImg, blip: 380 },
 };
 
 /** Does this scene get the cinematic letterbox treatment? */

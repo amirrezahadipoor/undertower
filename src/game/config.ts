@@ -1,5 +1,11 @@
 import type { ActTheme, EnemyDef, EnemyKind, MapData, SpellId, SynergyDef, TowerDef, TowerKind } from './types';
 
+import act1Img from '../assets/menu-bg.jpg';
+import act2Img from '../assets/act2.jpg';
+import act3Img from '../assets/act3.jpg';
+import act4Img from '../assets/act4.jpg';
+import act5Img from '../assets/mirror.jpg';
+
 export const TILE = 64;
 export const COLS = 20;
 export const ROWS = 11;
@@ -70,32 +76,32 @@ export const actOf = (w: number) => Math.min(6, Math.max(1, Math.ceil((((Math.ma
 
 export const ACTS: ActTheme[] = [
   {
-    act: 1, title: 'فصل اول', sub: 'مرز هنوز می‌خوابد', img: '/assets/menu-bg.jpg', short: 'فصل ۱',
+    act: 1, title: 'فصل اول', sub: 'مرز هنوز می‌خوابد', img: act1Img, short: 'فصل ۱',
     groundA: '#0d1226', groundB: '#070a18', path: '#141a30', glow: '129,140,248',
     crystal: '#1b2747', spore: '#67e8f9', vein: '#a5b4fc', weather: 'motes',
   },
   {
-    act: 2, title: 'فصل دوم', sub: 'مه، خونی شد', img: '/assets/act2.jpg', short: 'فصل ۲',
+    act: 2, title: 'فصل دوم', sub: 'مه، خونی شد', img: act2Img, short: 'فصل ۲',
     groundA: '#1d0e22', groundB: '#0f0713', path: '#241026', glow: '251,113,133',
     crystal: '#3b1230', spore: '#fb7185', vein: '#fda4af', weather: 'rain',
   },
   {
-    act: 3, title: 'فصل سوم', sub: 'بارانِ خاکستر', img: '/assets/act3.jpg', short: 'فصل ۳',
+    act: 3, title: 'فصل سوم', sub: 'بارانِ خاکستر', img: act3Img, short: 'فصل ۳',
     groundA: '#181410', groundB: '#0b0906', path: '#221a11', glow: '251,191,36',
     crystal: '#3a2b12', spore: '#fbbf24', vein: '#fcd34d', weather: 'ash',
   },
   {
-    act: 4, title: 'فصل چهارم', sub: 'تختِ تهی', img: '/assets/act4.jpg', short: 'فصل ۴',
+    act: 4, title: 'فصل چهارم', sub: 'تختِ تهی', img: act4Img, short: 'فصل ۴',
     groundA: '#100a24', groundB: '#060312', path: '#160e2e', glow: '192,132,252',
     crystal: '#241145', spore: '#c084fc', vein: '#d8b4fe', weather: 'void',
   },
   {
-    act: 5, title: 'فصل پنجم', sub: 'تالارِ آیینه‌ها', img: '/assets/mirror.jpg', short: 'فصل ۵',
+    act: 5, title: 'فصل پنجم', sub: 'تالارِ آیینه‌ها', img: act5Img, short: 'فصل ۵',
     groundA: '#071a1c', groundB: '#030b0d', path: '#0b2326', glow: '94,234,212',
     crystal: '#0f3a3d', spore: '#5eead4', vein: '#99f6e4', weather: 'motes',
   },
   {
-    act: 6, title: 'فصل ششم', sub: 'سپیده‌دمِ خونین', img: '/assets/menu-bg.jpg', short: 'فصل ۶',
+    act: 6, title: 'فصل ششم', sub: 'سپیده‌دمِ خونین', img: act1Img, short: 'فصل ۶',
     groundA: '#1c0f0b', groundB: '#0a0504', path: '#2a140e', glow: '251,146,60',
     crystal: '#3d1a10', spore: '#fbbf24', vein: '#fdba74', weather: 'ash',
   },
@@ -337,12 +343,16 @@ export const SYNERGIES: SynergyDef[] = [
 ];
 
 export const ASCEND = {
+  /** stars with fixed cost/rate bonuses — beyond this, "legendary power" begins */
   max: 5,
   baseCost: 240,
   costStep: 140,
   dmgPerStar: 0.16,
   ratePerStar: 0.06,
   rangePerStar: 0.04,
+  /** endless ascension: exponential gold sink so late-game gold always has a use */
+  endlessBase: 6200,
+  endlessStep: 2.15,
 };
 
 /* ─────────────────────────────────────────────────────────── */
@@ -353,19 +363,20 @@ export const ECON = {
   startGold: 185,
   startLives: 20,
   sellRate: 0.7,
-  interestRate: 0.075,
-  interestCap: 100,
-  bonus: (w: number) => Math.round(26 + 3.85 * w),
+  interestRate: 0.05,
+  interestCap: 60,
+  bonus: (w: number) => Math.round(22 + 2.6 * w),
   earlyBonus: (w: number) => 16 + 2 * w,
-  hpMult: (w: number) => 1 + 0.196 * (w - 1) + 0.035 * Math.pow(w - 1, 1.42),
+  hpMult: (w: number) =>
+    1 + 0.196 * (w - 1) + 0.035 * Math.pow(w - 1, 1.42) + 0.06 * Math.pow(Math.max(0, w - 15), 1.75),
   speedMult: (w: number) => 1 + Math.min(0.4, 0.007 * (w - 1)),
-  goldMult: (w: number) => 1 + 0.038 * (w - 1),
+  goldMult: (w: number) => 1 + 0.026 * (w - 1),
   comboMax: 0.5,
   comboPerStack: 0.022,
   comboWindow: 1.5,
   eliteFrom: 14,
   armorFloor: 0.28,
   /** each completed 60-wave cycle multiplies enemy hp/gold */
-  cycleHp: 1.55,
+  cycleHp: 1.4,
   cycleGold: 1.25,
 };

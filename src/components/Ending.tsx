@@ -1,3 +1,5 @@
+import menuBgImg from '../assets/menu-bg.jpg';
+import act4Img from '../assets/act4.jpg';
 import { useEffect, useState } from 'react';
 import { Crown, Home, Infinity as InfinityIcon, Sunrise } from 'lucide-react';
 import { ENDING_DAWN, ENDING_THRONE } from '../game/story';
@@ -51,7 +53,7 @@ export default function Ending({ kind, wave, kills, timeSec, onContinue, onMenu 
   return (
     <div className="fixed inset-0 z-[60] overflow-hidden bg-black text-center" onClick={() => phase === 'story' && setIdx((i) => Math.min(lines.length, i + 1))}>
       <img
-        src={dawn ? '/assets/menu-bg.jpg' : '/assets/act4.jpg'}
+        src={dawn ? menuBgImg : act4Img}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
         style={{ animation: 'actFade 40s ease both', filter: dawn ? 'saturate(1.3) brightness(1.15)' : 'saturate(0.8)' }}

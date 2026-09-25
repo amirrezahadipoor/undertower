@@ -14,18 +14,31 @@ const sourceFiles = import.meta.glob('/src/**/*.{ts,tsx,css}', {
   import: 'default',
 }) as Record<string, string>;
 
-const assetNames = [
-  'menu-bg.jpg',
-  'act2.jpg',
-  'act3.jpg',
-  'act4.jpg',
-  'mirror.jpg',
-  'core.png',
-  'king.png',
-  'nebu.png',
-  'nebu-soft.png',
-  'sage.png',
-];
+// Images are bundled as module URLs (inlined as data: URLs in the single-file
+// build), so the archive can be assembled without any network request.
+import act1Url from '../../src/assets/menu-bg.jpg';
+import act2Url from '../../src/assets/act2.jpg';
+import act3Url from '../../src/assets/act3.jpg';
+import act4Url from '../../src/assets/act4.jpg';
+import act5Url from '../../src/assets/mirror.jpg';
+import coreUrl from '../../src/assets/core.png';
+import kingUrl from '../../src/assets/king.png';
+import nebuUrl from '../../src/assets/nebu.png';
+import nebuSoftUrl from '../../src/assets/nebu-soft.png';
+import sageUrl from '../../src/assets/sage.png';
+
+const IMAGE_URLS: Record<string, string> = {
+  'menu-bg.jpg': act1Url,
+  'act2.jpg': act2Url,
+  'act3.jpg': act3Url,
+  'act4.jpg': act4Url,
+  'mirror.jpg': act5Url,
+  'core.png': coreUrl,
+  'king.png': kingUrl,
+  'nebu.png': nebuUrl,
+  'nebu-soft.png': nebuSoftUrl,
+  'sage.png': sageUrl,
+};
 
 export async function downloadProjectZip(onProgress: (percent: number) => void = () => {}) {
   const { default: JSZip } = await import('jszip');
@@ -47,20 +60,19 @@ export async function downloadProjectZip(onProgress: (percent: number) => void =
     throw new Error('سورس پروژه کامل بارگذاری نشد؛ ساخت ZIP متوقف شد.');
   }
 
-  const base = import.meta.env.BASE_URL;
   let fetchedCount = 0;
   const images = await Promise.all(
-    assetNames.map(async (name) => {
-      const response = await fetch(`${base}assets/${name}`);
-      if (!response.ok || response.headers.get('content-type')?.includes('text/html')) {
+    Object.entries(IMAGE_URLS).map(async ([name, url]) => {
+      const response = await fetch(url);
+      if (!response.ok) {
         throw new Error(`تصویر ${name} برای بسته‌بندی در دسترس نیست.`);
       }
       const data = await response.arrayBuffer();
-      onProgress(Math.round((++fetchedCount / assetNames.length) * 30));
+      onProgress(Math.round((++fetchedCount / Object.keys(IMAGE_URLS).length) * 30));
       return { name, data };
     }),
   );
-  for (const { name, data } of images) root.file(`public/assets/${name}`, data);
+  for (const { name, data } of images) root.file(`src/assets/${name}`, data);
 
   const blob = await zip.generateAsync(
     { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 5 } },

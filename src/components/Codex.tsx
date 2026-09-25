@@ -1,3 +1,4 @@
+import mirrorImg from '../assets/mirror.jpg';
 import { useMemo, useState } from 'react';
 import { Award, BookOpen, Check, Coins, Gem, Link2, Lock, PawPrint, Skull, Sparkles, Star, Swords, Target, X, Zap } from 'lucide-react';
 import { ENEMIES, ECON, KINDS, SYNERGIES, TOWERS } from '../game/config';
@@ -61,7 +62,7 @@ export default function Codex({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#04050c]/92 p-3 backdrop-blur-sm" onClick={onClose}>
       <div className="pointer-events-none absolute inset-0 opacity-25">
-        <img src="/assets/mirror.jpg" alt="" className="h-full w-full object-cover" draggable={false} />
+        <img src={mirrorImg} alt="" className="h-full w-full object-cover" draggable={false} />
       </div>
       <div
         className="anim-rise relative flex max-h-[calc(100dvh-16px)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-violet-400/30 bg-[#080b18]/96 shadow-[0_0_80px_rgba(139,92,246,0.28)]"
@@ -107,7 +108,7 @@ export default function Codex({ onClose }: { onClose: () => void }) {
           <div className="min-h-0 flex-1 overflow-y-auto p-4">
             <p className="mb-3 text-xs leading-6 text-slate-400">
               وقتی دو برجِ مکمل را در فاصلهٔ کمتر از ۲ خانه بسازی، بینشان یک <span className="font-bold text-cyan-200">مدارِ هم‌نوایی</span> روشن می‌شود
-              و هر دو توانِ تازه‌ای می‌گیرند. پس از رسیدن به «اوج» (سطح ۴)، هر برج می‌تواند تا ۵ ستاره <span className="font-bold text-amber-200">«فرااوج ★»</span> هم ارتقا بگیرد.
+              و هر دو توانِ تازه‌ای می‌گیرند. پس از رسیدن به «اوج» (سطح ۴)، هر برج می‌تواند تا ۵ ستاره <span className="font-bold text-amber-200">«فرااوج ★»</span> ارتقا بگیرد — و بعد از آن، «قدرتِ افسانه‌ای» بی‌پایان است: هر ستارهٔ بیشتر، فقط آسیب را اضافه می‌کند و هزینه‌اش نمایی بالا می‌رود.
             </p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {SYNERGIES.map((syn) => {

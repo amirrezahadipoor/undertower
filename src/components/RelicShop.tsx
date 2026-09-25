@@ -1,3 +1,4 @@
+import mirrorImg from '../assets/mirror.jpg';
 import { useState } from 'react';
 import { Check, ChefHat, Clock, Coins, Eye, Gem, Handshake, Heart, Magnet, Snowflake, Swords, Wand2, X, Zap } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -25,7 +26,7 @@ export default function RelicShop({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#04050c]/90 p-2 backdrop-blur-sm sm:p-4" onClick={onClose}>
       <div className="pointer-events-none absolute inset-0 opacity-30">
-        <img src="/assets/mirror.jpg" alt="" className="h-full w-full object-cover" draggable={false} />
+        <img src={mirrorImg} alt="" className="h-full w-full object-cover" draggable={false} />
         <div className="absolute inset-0 bg-gradient-to-b from-[#04050c]/60 via-transparent to-[#04050c]" />
       </div>
       <div

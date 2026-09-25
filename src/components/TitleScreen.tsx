@@ -1,3 +1,4 @@
+import menuBgImg from '../assets/menu-bg.jpg';
 import { useMemo, useState } from 'react';
 import { BookOpen, Check, Download, Gem, Ghost, Play, Skull, Trophy, Volume2, Wand2 } from 'lucide-react';
 import RelicShop from './RelicShop';
@@ -51,7 +52,7 @@ export default function TitleScreen({ best, onStart }: Props) {
 
   return (
     <div className="relative flex min-h-dvh w-full select-none flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#04050c] px-3 py-10">
-      <img src="/assets/menu-bg.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" draggable={false} />
+      <img src={menuBgImg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" draggable={false} />
       <div className="absolute inset-0 bg-gradient-to-b from-[#04050c]/70 via-transparent to-[#04050c]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_25%,#04050c_88%)]" />
       <div className="scanlines absolute inset-0" />

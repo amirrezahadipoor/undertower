@@ -1,3 +1,5 @@
+import coreImg from '../assets/core.png';
+import nebuSoftImg from '../assets/nebu-soft.png';
 import { useEffect } from 'react';
 import { Coins, Gem, Heart, Home, RotateCcw, Skull, Swords, Trophy, Wand2 } from 'lucide-react';
 import { GAMEOVER } from '../game/story';
@@ -30,7 +32,7 @@ export default function GameOver({ wave, kills, earned, timeSec, best, isRecord,
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#04050c]/92 p-3 backdrop-blur-sm sm:p-4">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(76,5,25,0.28),transparent_65%)]" />
       <div className="relative my-auto flex w-full max-w-xl flex-col items-center gap-3 text-center sm:gap-5">
-        <img src="/assets/core.png" alt="" className="pix h-14 w-14 object-contain opacity-70 grayscale sm:h-24 sm:w-24" draggable={false} />
+        <img src={coreImg} alt="" className="pix h-14 w-14 object-contain opacity-70 grayscale sm:h-24 sm:w-24" draggable={false} />
 
         <div>
           <div className="font-pixel ltr anim-flicker text-xl text-rose-500 sm:text-2xl" style={{ textShadow: '0 0 18px rgba(244,63,94,0.7)' }}>
@@ -48,7 +50,7 @@ export default function GameOver({ wave, kills, earned, timeSec, best, isRecord,
 
         <div className="dialogue-frame w-full p-4 text-right">
           <div className="flex items-start gap-3">
-            <img src="/assets/nebu-soft.png" alt="نیبو" className="pix h-14 w-14 shrink-0 border-2 border-cyan-300/70 object-cover" />
+            <img src={nebuSoftImg} alt="نیبو" className="pix h-14 w-14 shrink-0 border-2 border-cyan-300/70 object-cover" />
             <div className="space-y-2 text-sm leading-7 text-slate-200">
               {GAMEOVER.map((l, i) => (
                 <p key={i} className="anim-rise" style={{ animationDelay: `${0.4 + i * 0.55}s` }}>

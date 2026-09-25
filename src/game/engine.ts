@@ -289,8 +289,10 @@ export function recomputeSynergies(g: Game) {
 export function effTowerStats(g: Game, t: Tower): { dmg: number; rate: number; range: number } {
   const st = TOWERS[t.kind].levels[t.level];
   let dmg = st.dmg * g.mods.dmgMult * (1 + t.ascend * ASCEND.dmgPerStar);
-  let rate = st.rate * (1 + t.ascend * ASCEND.ratePerStar);
-  let range = st.range * (1 + t.ascend * ASCEND.rangePerStar);
+  // Only damage scales past 5 stars — otherwise range would eventually cover the whole map.
+  const starBonus = Math.min(t.ascend, ASCEND.max);
+  let rate = st.rate * (1 + starBonus * ASCEND.ratePerStar);
+  let range = st.range * (1 + starBonus * ASCEND.rangePerStar);
 
   if (g.dmgBuffWaves > 0) dmg *= 1 + g.dmgBuffAmt;
   if (g.rangeBuffWaves > 0) range *= 1 + g.rangeBuffAmt;
@@ -319,8 +321,13 @@ export function effTowerStats(g: Game, t: Tower): { dmg: number; rate: number; r
 export const costOf = (g: Game, kind: TowerKind, level: number) =>
   Math.round(TOWERS[kind].levels[level].cost * g.mods.costMult);
 
-export const ascendCostOf = (g: Game, ascend: number) =>
-  Math.round((ASCEND.baseCost + ascend * ASCEND.costStep) * g.mods.costMult);
+/** Cost of the NEXT star. Stars 1–5 are fixed; beyond that, exponential "legendary" pricing. */
+export const ascendCostOf = (g: Game, currentStars: number) =>
+  Math.round(
+    (currentStars < ASCEND.max
+      ? ASCEND.baseCost + currentStars * ASCEND.costStep
+      : ASCEND.endlessBase * Math.pow(ASCEND.endlessStep, currentStars - ASCEND.max)) * g.mods.costMult,
+  );
 
 export function canBuildAt(g: Game, tx: number, ty: number): boolean {
   if (tx < 0 || ty < 0 || tx >= 20 || ty >= 11) return false;
@@ -384,7 +391,6 @@ export function upgradeSelected(g: Game): boolean {
   const def = TOWERS[t.kind];
   const atApex = t.level >= def.levels.length - 1;
   if (atApex) {
-    if (t.ascend >= ASCEND.max) return false;
     const cost = ascendCostOf(g, t.ascend);
     if (g.gold < cost) {
       audio.error();
@@ -527,7 +533,7 @@ export function selectionSummary(g: Game): Sel {
   let isAscend = false;
   if (!atApex) {
     upgradeCost = costOf(g, t.kind, t.level + 1);
-  } else if (t.ascend < ASCEND.max) {
+  } else {
     upgradeCost = ascendCostOf(g, t.ascend);
     isAscend = true;
   }
