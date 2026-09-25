@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import type { Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -81,9 +82,9 @@ function pwaOffline() {
     return png(size, size, rgba);
   }
 
-  return {
+  const plugin: Plugin = {
     name: "et-pwa-offline",
-    apply: "build" as const,
+    apply: "build",
     generateBundle() {
       this.emitFile({ type: "asset", fileName: "icon-192.png", source: crystalIcon(192) });
       this.emitFile({ type: "asset", fileName: "icon-512.png", source: crystalIcon(512) });
@@ -135,6 +136,7 @@ function pwaOffline() {
       this.emitFile({ type: "asset", fileName: "sw.js", source: sw });
     },
   };
+  return plugin;
 }
 
 // https://vite.dev/config/

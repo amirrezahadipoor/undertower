@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { pillarLocked, relicMods } from '../src/game/meta';
 import {
   canBuildAt,
   castSpell,
@@ -10,6 +11,7 @@ import {
   update,
   upgradeSelected,
   ascendCostOf,
+  createGameWithPet,
   type Game,
 } from '../src/game/engine';
 import { COLS, ROWS, TILE, TOWERS, tileKey, ECON, ASCEND } from '../src/game/config';
@@ -297,6 +299,52 @@ describe('endless ascension', () => {
     }
     const e = effTowerStats(g, t);
     expect(e.dmg).toBeGreaterThan(0);
+  });
+});
+
+/* ── 5.5) hell mode & architect pillars ─────────────────────── */
+
+describe('hell mode', () => {
+  it('scales enemy hp and gold by ×1.45 with identical seeds', () => {
+    const firstEnemy = (hell: boolean) => {
+      seedRng(4242);
+      const g = createGame();
+      g.hell = hell;
+      g.wave = 30; // larger numbers → rounding noise negligible
+      startWave(g);
+      let frames = 0;
+      while (g.enemies.length === 0 && frames++ < 600) update(g, 1 / 60);
+      const e = g.enemies[0];
+      return { maxHp: e.maxHp, gold: e.gold };
+    };
+    const normal = firstEnemy(false);
+    const hell = firstEnemy(true);
+    expect(hell.maxHp / normal.maxHp).toBeCloseTo(1.45, 2);
+    // gold is integer-rounded, so assert the range instead of an exact ratio
+    expect(hell.gold / normal.gold).toBeGreaterThan(1.35);
+    expect(hell.gold / normal.gold).toBeLessThan(1.6);
+  });
+
+  it('starts with half hearts (min 5)', () => {
+    const g = createGameWithPet(
+      { startGold: 0, startLives: 0, costMult: 1, dmgMult: 1, chainBonus: 0, slowMult: 1, critCh: 0, heal5: 1, autoCrystal: false, spellCdMult: 1, interestCapBonus: 0 },
+      true,
+    );
+    expect(g.hell).toBe(true);
+    expect(g.lives).toBe(Math.round(ECON.startLives * 0.5));
+  });
+});
+
+describe('architect pillars', () => {
+  it('tier-2 requires tier-1 of the same branch', () => {
+    // tier-2 alone is locked
+    expect(pillarLocked('p-interest')).toBe(true);
+    expect(pillarLocked('p-seed')).toBe(false);
+  });
+
+  it('merge into relicMods', () => {
+    const mods = relicMods();
+    expect(mods.interestCapBonus).toBeGreaterThanOrEqual(0);
   });
 });
 
