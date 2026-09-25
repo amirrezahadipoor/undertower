@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, Heart, Home, MapPin, Pause, Play, ScanSearch, Volume2, VolumeX } from 'lucide-react';
+import { BookOpen, Heart, Home, MapPin, MonitorUp, Pause, Play, RotateCw, ScanSearch, Volume2, VolumeX, X } from 'lucide-react';
 import GameCanvas from '../game/GameCanvas';
 import Dialogue from '../components/Dialogue';
 import GameOver from '../components/GameOver';
@@ -31,6 +31,7 @@ import { rollEvent } from '../game/modifiers';
 import type { RandomEvent } from '../game/modifiers';
 import { PETS, petForWave, unlockPet } from '../game/pets';
 import { clearSavedRun, loadRun, peekSavedRun, saveRun } from '../game/save';
+import { enterImmersive, haptic, installGestureGuards, isTouchDevice } from '../utils/mobile';
 import type { RunSnapshot } from '../game/save';
 import { seedRng } from '../game/rng';
 import {
@@ -105,6 +106,28 @@ export default function GameShell({ onRetry, onExit }: Props) {
     typeof window !== 'undefined' && window.matchMedia('(max-width: 650px) and (orientation: portrait)').matches,
   );
   const boardViewport = useRef<HTMLDivElement>(null);
+
+  // Block iOS pinch-zoom / double-tap page gestures once per page.
+  useEffect(() => {
+    installGestureGuards();
+  }, []);
+
+  // Gentle "rotate your phone" hint for portrait-held touch devices.
+  const [rotateHint, setRotateHint] = useState(
+    () => typeof window !== 'undefined' && isTouchDevice() && window.matchMedia('(orientation: portrait)').matches && window.innerWidth < 915,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(orientation: portrait)');
+    const update = () => {
+      setRotateHint(isTouchDevice() && mq.matches && window.innerWidth < 915);
+    };
+    mq.addEventListener('change', update);
+    window.addEventListener('resize', update);
+    return () => {
+      mq.removeEventListener('change', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
 
   const seenRef = useRef(new Set<string>());
   const eventSeen = useRef(new Set<string>());
@@ -229,9 +252,11 @@ export default function GameShell({ onRetry, onExit }: Props) {
   const handleEvent = (e: GameEvent) => {
     switch (e.type) {
       case 'waveStart':
+        haptic(8);
         if (!isBossWave(e.wave ?? 0)) setBanner({ text: `موج ${fa(e.wave ?? 0)}`, tone: 'normal' });
         break;
       case 'bossSpawn': {
+        haptic([14, 50, 14]);
         const v = bossVariantOf(bossTier(e.wave ?? 10));
         setBanner({ text: v === 'king' ? 'پادشاهِ خاموشی' : BOSS_NAMES[v], sub: v === 'king' ? 'تاج را بردار' : 'پادشاهِ خاموشی خندید', tone: 'boss' });
         audio.music('boss');
@@ -253,6 +278,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
         if (game.pet) toast(`${PETS[game.pet.kind].name} به سطح ${fa(e.level ?? 1)} رسید`);
         break;
       case 'kingDown': {
+        haptic([20, 60, 20, 60, 40]);
         addShards(12);
         audio.shard();
         toast('+۱۲ خرده‌خاطره — پادشاه فرو افتاد');
@@ -265,6 +291,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
         break;
       }
       case 'bossDown': {
+        haptic([15, 40, 15]);
         const tier = e.tier ?? 1;
         pendingBossChoice.current = true;
         addShards(3);
@@ -298,6 +325,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
         break;
       }
       case 'waveClear': {
+        haptic(10);
         audio.music('combat');
         const w = e.wave ?? 0;
         saveBest(w);
@@ -341,6 +369,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
         setLivesKey((k) => k + 1);
         break;
       case 'firstLeak':
+        haptic([22, 60, 22]);
         setLivesKey((k) => k + 1);
         openScene('firstLeak', FIRST_LEAK);
         break;
@@ -348,6 +377,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
         openScene('lowLives', LOW_LIVES);
         break;
       case 'gameover': {
+        haptic([70, 60, 110]);
         saveBest(e.wave ?? 0);
         saveSouls();
         clearSavedRun();
@@ -535,6 +565,28 @@ export default function GameShell({ onRetry, onExit }: Props) {
 
         <Toasts items={toasts} />
 
+        {rotateHint && !manualPaused && (
+          <div className="pointer-events-none fixed inset-x-0 bottom-1 z-40 flex justify-center px-3 lg:hidden">
+            <div className="glass pointer-events-auto anim-rise flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-bold text-cyan-100 shadow-xl">
+              <RotateCw size={14} className="shrink-0 text-cyan-300" />
+              <span className="whitespace-nowrap">برای تجربهٔ بهتر، گوشی را افقی بگیر</span>
+              <button
+                type="button"
+                onClick={() => {
+                  haptic(10);
+                  void enterImmersive();
+                }}
+                className="mobile-touch rounded-full bg-cyan-400/25 px-2.5 py-0.5 text-[10px] font-black text-cyan-100 active:bg-cyan-400/40"
+              >
+                تمام‌صفحه
+              </button>
+              <button type="button" onClick={() => setRotateHint(false)} aria-label="بستن راهنمای چرخش" className="mobile-touch flex w-6 justify-center text-slate-400 active:text-white">
+                <X size={13} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {manualPaused && !locked && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 overflow-y-auto bg-[#04050c]/90 p-4 backdrop-blur-sm">
             <Pause size={34} className="shrink-0 text-cyan-300" />
@@ -551,6 +603,17 @@ export default function GameShell({ onRetry, onExit }: Props) {
                 <>
                   <button onClick={() => setShowCodex(true)} className="mobile-touch flex items-center gap-2 rounded-lg border border-violet-400/60 bg-violet-500/15 px-4 text-sm font-bold text-violet-100 transition hover:bg-violet-500/30">
                     <BookOpen size={16} />راهنما
+                  </button>
+                  <button
+                    onClick={() => {
+                      haptic(10);
+                      void enterImmersive().then(({ fullscreen, locked }) => {
+                        toast(fullscreen ? (locked ? 'تمام‌صفحه + قفلِ افقی فعال شد' : 'تمام‌صفحه فعال شد') : 'مرورگر اجازهٔ تمام‌صفحه نداد');
+                      });
+                    }}
+                    className="mobile-touch flex items-center gap-2 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-4 text-sm font-bold text-cyan-100 transition hover:bg-cyan-500/25"
+                  >
+                    <MonitorUp size={16} />تمام‌صفحه
                   </button>
                   <button onClick={() => setMuted(audio.toggleMute())} className="mobile-touch flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-4 text-sm font-bold text-slate-200 lg:hidden">
                     {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}{muted ? 'روشن کردن صدا' : 'قطع صدا'}
@@ -588,13 +651,28 @@ export default function GameShell({ onRetry, onExit }: Props) {
         hud={hud}
         sel={sel}
         locked={locked || exitConfirm}
-        onBuild={(k) => tryPlace(game, k)}
-        onUpgrade={() => upgradeSelected(game)}
-        onSell={() => sellSelected(game)}
+        onBuild={(k) => {
+          haptic(10);
+          tryPlace(game, k);
+        }}
+        onUpgrade={() => {
+          haptic(10);
+          upgradeSelected(game);
+        }}
+        onSell={() => {
+          haptic(14);
+          sellSelected(game);
+        }}
         onCycleTarget={() => cycleTargetMode(game)}
         onDeselect={() => deselect(game)}
-        onStartWave={requestStart}
-        onCast={(id) => castSpell(game, id)}
+        onStartWave={() => {
+          haptic(12);
+          requestStart();
+        }}
+        onCast={(id) => {
+          haptic(10);
+          castSpell(game, id);
+        }}
         onCodex={() => setShowCodex(true)}
       />
 

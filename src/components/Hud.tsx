@@ -75,7 +75,7 @@ export function TopBar({ hud, muted, livesKey, locked, onSpeed, onTogglePause, o
   const modDef = hud.mod ? MODS[hud.mod as ModId] : null;
   return (
     <header
-      className={`relative z-30 flex h-[52px] shrink-0 items-center justify-between gap-1 border-b border-white/5 bg-[#070a16]/80 px-1.5 backdrop-blur-md transition-opacity sm:gap-3 sm:px-3 ${
+      className={`game-topbar relative z-30 flex shrink-0 items-center justify-between gap-1 border-b border-white/5 bg-[#070a16]/80 px-1.5 backdrop-blur-md transition-opacity sm:gap-3 sm:px-3 ${
         locked ? 'pointer-events-none opacity-50' : ''
       }`}
     >
