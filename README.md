@@ -45,6 +45,8 @@ From the project root you can also generate the same archive locally: `node scri
 
 The repo ships a GitHub Actions workflow (`.github/workflows/apk.yml`) that builds an installable **debug APK** on every `v*` tag (or manually via *Run workflow*): tests → single-file web build → Capacitor Android shell (landscape-locked, fullscreen) → Gradle `assembleDebug`. The APK is uploaded as the `EternityDefense-APK` artifact. Locally the same pipeline runs with `npm run apk` (requires Android SDK + JDK 21).
 
+> **v1.0.0** was built this way: `EternityDefense-debug.apk` (~12 MB, Capacitor 7, `com.eternitydefense.game`) — verified: `classes.dex` + the full single-file game in `assets/public/index.html` + 20 adaptive launcher icons. Debug-signed (installable directly); Play-Store signing is a roadmap item.
+
 ## Roadmap
 
 See [ROADMAP.md](./ROADMAP.md) — the staged path from "polished indie" toward AAA: rendering, content, netcode-safe leaderboards and tooling. Completed items are checked off as they ship.
