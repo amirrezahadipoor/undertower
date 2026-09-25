@@ -66,31 +66,57 @@ export default function GameCanvas({ game, inputLocked, onHud, onEvent, onSel }:
       }
     };
 
+    // A drawing or simulation error must never be fatal: if the exception escaped
+    // this callback, `requestAnimationFrame(frame)` below would never run again and
+    // the game would freeze permanently. Report it and keep the loop alive.
+    let consecutiveErrors = 0;
+    const onFrameError = (where: string, err: unknown) => {
+      consecutiveErrors++;
+      if (import.meta.env.DEV || consecutiveErrors <= 3) {
+        console.error(`[frame:${where}]`, err);
+      }
+    };
+
     const frame = (now: number) => {
-      const dt = (now - last) / 1000;
-      last = now;
-      if (!game.paused) update(game, dt);
-      if (game.act !== bakedAct) {
-        bakedAct = game.act;
-        bg = bakeBackground(game.map, game.act);
-      }
+      try {
+        const dt = (now - last) / 1000;
+        last = now;
+        if (!game.paused) update(game, dt);
+        if (game.act !== bakedAct) {
+          bakedAct = game.act;
+          bg = bakeBackground(game.map, game.act);
+        }
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.imageSmoothingEnabled = true;
-      drawScene(ctx, game, bg);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.imageSmoothingEnabled = true;
+        drawScene(ctx, game, bg);
 
-      if (game.events.length) {
-        const evs = game.events.splice(0, game.events.length);
-        for (const e of evs) cbRef.current.onEvent(e);
-        cbRef.current.onHud(collectHud(game));
-        hudTimer = 0;
+        if (game.events.length) {
+          const evs = game.events.splice(0, game.events.length);
+          for (const e of evs) cbRef.current.onEvent(e);
+          cbRef.current.onHud(collectHud(game));
+          hudTimer = 0;
+        }
+        hudTimer += dt;
+        if (hudTimer > 0.12) {
+          hudTimer = 0;
+          cbRef.current.onHud(collectHud(game));
+        }
+        pushSel();
+        consecutiveErrors = 0;
+      } catch (err) {
+        onFrameError('frame', err);
+        // Drop transient render state so a poisoned projectile/particle cannot
+        // throw on every subsequent frame forever.
+        try {
+          game.particles.length = 0;
+          game.projectiles.length = 0;
+          game.bolts.length = 0;
+          game.texts.length = 0;
+        } catch {
+          /* ignore */
+        }
       }
-      hudTimer += dt;
-      if (hudTimer > 0.12) {
-        hudTimer = 0;
-        cbRef.current.onHud(collectHud(game));
-      }
-      pushSel();
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);

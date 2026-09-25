@@ -30,6 +30,9 @@ import { addShards, bumpMercy, getMercy, relicMods, shardsEarned, unlockAchievem
 import { rollEvent } from '../game/modifiers';
 import type { RandomEvent } from '../game/modifiers';
 import { PETS, petForWave, unlockPet } from '../game/pets';
+import { clearSavedRun, loadRun, peekSavedRun, saveRun } from '../game/save';
+import type { RunSnapshot } from '../game/save';
+import { seedRng } from '../game/rng';
 import {
   CYCLE_START,
   ENDING_LABELS,
@@ -71,12 +74,19 @@ interface DialogState {
 
 export default function GameShell({ onRetry, onExit }: Props) {
   const gameRef = useRef<Game | null>(null);
-  if (!gameRef.current) gameRef.current = createGameWithPet(relicMods());
+  if (!gameRef.current) {
+    seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
+    gameRef.current = createGameWithPet(relicMods());
+  }
   const game = gameRef.current;
+
+  // A saved run is offered on the first frame; the fresh object above is only a
+  // scaffold until the player picks "ادامه".
+  const [savedRun, setSavedRun] = useState<RunSnapshot | null>(() => peekSavedRun());
 
   const [hud, setHud] = useState<HudInfo>(() => collectHud(game));
   const [sel, setSel] = useState<Sel>({ type: 'none' });
-  const [dialog, setDialog] = useState<DialogState | null>({ lines: INTRO });
+  const [dialog, setDialog] = useState<DialogState | null>(() => (peekSavedRun() ? null : { lines: INTRO }));
   const [banner, setBanner] = useState<{ text: string; sub?: string; tone: 'normal' | 'boss' } | null>(null);
   const [chapter, setChapter] = useState<(typeof ACTS)[number] | null>(null);
   const [toasts, setToasts] = useState<{ id: number; text: string }[]>([]);
@@ -146,8 +156,8 @@ export default function GameShell({ onRetry, onExit }: Props) {
 
   useEffect(() => {
     game.paused =
-      dialog !== null || overStats !== null || manualPaused || chapter !== null || showCodex || showPets || event !== null || ending !== null;
-  }, [dialog, overStats, manualPaused, chapter, showCodex, showPets, event, ending, game]);
+      dialog !== null || overStats !== null || manualPaused || chapter !== null || showCodex || showPets || event !== null || ending !== null || savedRun !== null;
+  }, [dialog, overStats, manualPaused, chapter, showCodex, showPets, event, ending, savedRun, game]);
 
   useEffect(() => {
     audio.music('combat');
@@ -291,6 +301,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
         audio.music('combat');
         const w = e.wave ?? 0;
         saveBest(w);
+        if (!savedRun) saveRun(game);
         if (w === 10) checkAch('wave10');
         if (w === 20) checkAch('wave20');
         if (w === 30) checkAch('wave30');
@@ -339,6 +350,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
       case 'gameover': {
         saveBest(e.wave ?? 0);
         saveSouls();
+        clearSavedRun();
         const shards = shardsEarned(e.wave ?? 1);
         addShards(shards);
         audio.music(null);
@@ -386,7 +398,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
     if (next >= 3 && Math.random() < 0.28) toast(`نیبو: ${QUIPS[Math.floor(Math.random() * QUIPS.length)]}`);
   };
 
-  const locked = dialog !== null || overStats !== null || chapter !== null || showCodex || showPets || event !== null || ending !== null;
+  const locked = dialog !== null || overStats !== null || chapter !== null || showCodex || showPets || event !== null || ending !== null || savedRun !== null;
 
   const chooseEvent = (i: number) => {
     if (!event) return;
@@ -401,6 +413,50 @@ export default function GameShell({ onRetry, onExit }: Props) {
     setPet(game, k);
     setShowPets(false);
     setHud(collectHud(game));
+  };
+
+  // ── autosave ───────────────────────────────────────────────
+  // Every few seconds while the board is quiet, plus a final flush when the tab
+  // is hidden or closed (the only reliable "about to die" signal on mobile).
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (!savedRun && !overStats && game.phase !== 'over') saveRun(game);
+    }, 5000);
+    return () => window.clearInterval(id);
+  }, [game, savedRun, overStats]);
+
+  useEffect(() => {
+    const flush = () => {
+      if (!savedRun && !overStats && game.phase !== 'over') saveRun(game);
+    };
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('pagehide', flush);
+    };
+  }, [game, savedRun, overStats]);
+
+  const resumeSavedRun = () => {
+    if (loadRun(game)) {
+      setSavedRun(null);
+      setHud(collectHud(game));
+      setSel({ type: 'none' });
+      toast(`ادامه از موج ${fa(game.wave)}`);
+    } else {
+      clearSavedRun();
+      setSavedRun(null);
+      enqueueDialog({ lines: INTRO });
+    }
+  };
+
+  const discardSavedRun = () => {
+    clearSavedRun();
+    setSavedRun(null);
+    enqueueDialog({ lines: INTRO });
   };
 
   const exitToMenu = () => {
@@ -541,6 +597,48 @@ export default function GameShell({ onRetry, onExit }: Props) {
         onCast={(id) => castSpell(game, id)}
         onCodex={() => setShowCodex(true)}
       />
+
+      {savedRun && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#04050c]/92 p-4 backdrop-blur-sm">
+          <div className="anim-rise w-full max-w-sm rounded-2xl border border-cyan-300/25 bg-[#0a1020] p-5 text-right shadow-2xl">
+            <div className="font-pixel ltr text-[9px] tracking-[0.4em] text-cyan-300/70">CONTINUE</div>
+            <h2 className="mt-2 text-xl font-black text-slate-50">یک دور ناتمام داری</h2>
+            <p className="mt-1 text-[13px] leading-6 text-slate-400">
+              دفاع از قلب هنوز تمام نشده. می‌خواهی از همان‌جا ادامه بدهی؟
+            </p>
+            <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] px-2 py-2">
+                <dt className="text-[10px] text-slate-400">موج</dt>
+                <dd className="text-lg font-black text-cyan-200">{fa(savedRun.wave)}</dd>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] px-2 py-2">
+                <dt className="text-[10px] text-slate-400">جانِ قلب</dt>
+                <dd className="text-lg font-black text-rose-200">{fa(savedRun.lives)}</dd>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] px-2 py-2">
+                <dt className="text-[10px] text-slate-400">طلا</dt>
+                <dd className="text-lg font-black text-amber-200">{fa(savedRun.gold)}</dd>
+              </div>
+            </dl>
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={resumeSavedRun}
+                className="mobile-touch min-h-12 rounded-xl border border-cyan-300/65 bg-gradient-to-l from-cyan-400/30 to-violet-400/20 text-sm font-black text-cyan-50 active:scale-[0.98]"
+              >
+                ادامه از موج {fa(savedRun.wave)}
+              </button>
+              <button
+                type="button"
+                onClick={discardSavedRun}
+                className="mobile-touch min-h-12 rounded-xl border border-white/15 bg-white/5 text-sm font-bold text-slate-300 active:scale-[0.98]"
+              >
+                دورِ تازه شروع کن
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {dialog && !chapter && <Dialogue lines={dialog.lines} choices={dialog.choices} onDone={closeDialog} />}
 

@@ -19,6 +19,7 @@ import { bossTier, bossVariantOf, buildWave, cycleOf, isFinalWave, waveTotal } f
 import { audio } from './audio';
 import { MODS, rollModifier } from './modifiers';
 import type { ModId } from './modifiers';
+import { rand, randRange } from './rng';
 import type { RelicMods } from './meta';
 import { addPetXp, getPetSave, petLevel, petXp, petXpNeeded } from './pets';
 import type { Pet, PetKind } from './types';
@@ -158,7 +159,7 @@ export function makePet(kind: PetKind, map: MapData): Pet {
     vy: 0,
     angle: 0,
     cooldown: 1,
-    flap: Math.random() * 6,
+    flap: rand() * 6,
     shieldLeft: 0,
     reviveLeft: 0,
     flash: 0,
@@ -175,20 +176,19 @@ function resetPetWaveState(p: Pet) {
   p.reviveLeft = p.kind === 'phoenix' ? 1 : 0;
 }
 
-const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-function makeWeather(weather: (typeof ACTS)[number]['weather']): Particle[] {
+export function makeWeather(weather: (typeof ACTS)[number]['weather']): Particle[] {
   const list: Particle[] = [];
   const n = weather === 'rain' ? 80 : weather === 'ash' ? 65 : 45;
   for (let i = 0; i < n; i++) {
     list.push({
-      x: Math.random() * 1280,
-      y: Math.random() * 720,
-      vx: weather === 'rain' ? rand(-20, -8) : weather === 'ash' ? rand(-14, 4) : rand(-7, 7),
-      vy: weather === 'rain' ? rand(420, 640) : weather === 'ash' ? rand(16, 42) : rand(-18, -8),
-      life: rand(0, 10),
+      x: rand() * 1280,
+      y: rand() * 720,
+      vx: weather === 'rain' ? randRange(-20, -8) : weather === 'ash' ? randRange(-14, 4) : randRange(-7, 7),
+      vy: weather === 'rain' ? randRange(420, 640) : weather === 'ash' ? randRange(16, 42) : randRange(-18, -8),
+      life: randRange(0, 10),
       max: 10,
-      size: weather === 'rain' ? rand(8, 16) : rand(1, 3),
+      size: weather === 'rain' ? randRange(8, 16) : randRange(1, 3),
       color: '',
       type: weather === 'rain' ? 'rain' : weather === 'ash' ? 'ash' : 'mote',
     });
@@ -471,7 +471,7 @@ export function applyEventEffect(g: Game, effect: string, value: number): string
     case 'freeUpgrade': {
       const cands = g.towers.filter((t) => t.level < TOWERS[t.kind].levels.length - 1);
       if (cands.length) {
-        const t = cands[Math.floor(Math.random() * cands.length)];
+        const t = cands[Math.floor(rand() * cands.length)];
         t.level++;
         t.flash = 1;
         burst(g, t.x, t.y, 16, TOWERS[t.kind].color, 'spark');
@@ -491,7 +491,7 @@ export function applyEventEffect(g: Game, effect: string, value: number): string
       return `−${half} طلا، +${gain} جان`;
     }
     case 'curseHp': {
-      if (Math.random() < 0.6) {
+      if (rand() < 0.6) {
         g.gold += 200;
         g.earned += 200;
         audio.coin();
@@ -639,7 +639,7 @@ function spawnEnemy(g: Game, kind: Enemy['kind'], dist = 0, lat?: number) {
       hp *= 1 + (tier - 1) * 0.42;
     }
   }
-  const elite = kind !== 'boss' && w >= ECON.eliteFrom && Math.random() < Math.min(0.32, 0.1 + w * 0.006);
+  const elite = kind !== 'boss' && w >= ECON.eliteFrom && rand() < Math.min(0.32, 0.1 + w * 0.006);
   if (elite) {
     hp *= 1.35;
     speed *= 1.08;
@@ -674,8 +674,8 @@ function spawnEnemy(g: Game, kind: Enemy['kind'], dist = 0, lat?: number) {
     dmg: variant === 'king' ? 12 : def.dmg,
     radius,
     slowResist,
-    wob: Math.random() * Math.PI * 2,
-    lat: kind === 'boss' ? 0 : lat ?? rand(-9, 9),
+    wob: rand() * Math.PI * 2,
+    lat: kind === 'boss' ? 0 : lat ?? randRange(-9, 9),
     flash: 0,
     dead: false,
     boss: kind === 'boss',
@@ -686,11 +686,11 @@ function spawnEnemy(g: Game, kind: Enemy['kind'], dist = 0, lat?: number) {
     burnOwner: -1,
     markT: 0,
     markAmp: 0,
-    healT: rand(0.5, 1.6),
+    healT: randRange(0.5, 1.6),
     ghost: false,
     ghostT: variant === 'mist' ? 6 : 0,
     eyeStage: 0,
-    warpT: kind === 'warp' ? rand(1.5, 3) : 0,
+    warpT: kind === 'warp' ? randRange(1.5, 3) : 0,
     shield: maxShield,
     maxShield,
     volatile,
@@ -710,16 +710,16 @@ function spawnEnemy(g: Game, kind: Enemy['kind'], dist = 0, lat?: number) {
 
 function burst(g: Game, x: number, y: number, n: number, color: string, type: Particle['type']) {
   for (let i = 0; i < n; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const sp = rand(30, type === 'soul' ? 60 : 130);
+    const a = rand() * Math.PI * 2;
+    const sp = randRange(30, type === 'soul' ? 60 : 130);
     g.particles.push({
       x,
       y,
       vx: Math.cos(a) * sp,
       vy: Math.sin(a) * sp - (type === 'soul' ? 60 : 0),
-      life: rand(0.3, 0.9),
+      life: randRange(0.3, 0.9),
       max: 0.9,
-      size: rand(1.5, 3.5),
+      size: randRange(1.5, 3.5),
       color,
       type,
     });
@@ -729,7 +729,7 @@ function burst(g: Game, x: number, y: number, n: number, color: string, type: Pa
 
 function addText(g: Game, x: number, y: number, text: string, color: string, size = 11) {
   if (g.texts.length > 110) g.texts.shift();
-  g.texts.push({ x: x + rand(-4, 4), y, life: 0.8, max: 0.8, text, color, size });
+  g.texts.push({ x: x + randRange(-4, 4), y, life: 0.8, max: 0.8, text, color, size });
 }
 
 /* ── damage & death ────────────────────────────────────────── */
@@ -760,12 +760,12 @@ function killEnemy(g: Game, e: Enemy, src: Tower | null) {
 
   // chance to drop a clickable Soul Crystal
   const dropChance = e.boss ? 1 : e.elite ? 0.45 : e.armor >= 2 ? 0.12 : 0.035;
-  if (g.crystals.length < 6 && Math.random() < dropChance) {
+  if (g.crystals.length < 6 && rand() < dropChance) {
     const rawGold = Math.round((12 + g.wave * 1.8) * (g.mods.autoCrystal ? 1.3 : 1));
     g.crystals.push({
       id: g.nextId++,
-      x: Math.max(48, Math.min(1232, e.x + rand(-16, 16))),
-      y: Math.max(48, Math.min(656, e.y + rand(-16, 16))),
+      x: Math.max(48, Math.min(1232, e.x + randRange(-16, 16))),
+      y: Math.max(48, Math.min(656, e.y + randRange(-16, 16))),
       life: 7.5,
       max: 7.5,
       gold: rawGold,
@@ -845,7 +845,7 @@ function applyDamage(g: Game, e: Enemy, dmgIn: number, src: Tower | null, trueDm
   // thermal shock synergy: chilled + burning enemies take +35% damage
   if (g.thermalActive && e.slowT > 0 && e.burnT > 0) dmg *= 1.35;
   let crit = false;
-  if (src && !quiet && g.mods.critCh > 0 && Math.random() < g.mods.critCh) {
+  if (src && !quiet && g.mods.critCh > 0 && rand() < g.mods.critCh) {
     dmg *= 2;
     crit = true;
     audio.critDing();
@@ -891,7 +891,7 @@ function applyDamage(g: Game, e: Enemy, dmgIn: number, src: Tower | null, trueDm
       const court: Enemy['kind'][] = wantPhase === 2 ? ['reaver', 'reaver', 'warp', 'shade'] : ['frostgiant', 'reaver', 'warp', 'warp', 'healer'];
       court.forEach((k, i) => {
         const before = g.spawned;
-        spawnEnemy(g, k, Math.max(0, e.dist - 30 - i * 14), rand(-16, 16));
+        spawnEnemy(g, k, Math.max(0, e.dist - 30 - i * 14), randRange(-16, 16));
         g.spawned = before;
       });
       addText(g, e.x, e.y - e.radius - 30, wantPhase === 2 ? 'پادشاه: «برخیزید!»' : 'پادشاه: «تاجِ من...»', '#fde68a', 16);
@@ -910,7 +910,7 @@ function applyDamage(g: Game, e: Enemy, dmgIn: number, src: Tower | null, trueDm
       e.eyeStage++;
       for (let i = 0; i < 2; i++) {
         const before = g.spawned;
-        spawnEnemy(g, 'splitter', Math.max(0, e.dist - 10), e.lat + rand(-14, 14));
+        spawnEnemy(g, 'splitter', Math.max(0, e.dist - 10), e.lat + randRange(-14, 14));
         g.spawned = before;
       }
       addText(g, e.x, e.y - e.radius - 26, 'صدچشم شکافت!', '#f0abfc', 13);
@@ -928,15 +928,15 @@ function applySlow(g: Game, e: Enemy, pct: number, dur: number) {
     e.slowPct = Math.max(e.slowPct * 0.6, eff);
     e.slowT = Math.max(e.slowT, dur);
   }
-  if (Math.random() < 0.3) {
+  if (rand() < 0.3) {
     g.particles.push({
-      x: e.x + rand(-6, 6),
-      y: e.y + rand(-6, 6),
-      vx: rand(-8, 8),
-      vy: rand(-22, -10),
+      x: e.x + randRange(-6, 6),
+      y: e.y + randRange(-6, 6),
+      vx: randRange(-8, 8),
+      vy: randRange(-22, -10),
       life: 0.5,
       max: 0.5,
-      size: rand(1, 2.2),
+      size: randRange(1, 2.2),
       color: '#a5f3fc',
       type: 'snow',
     });
@@ -971,7 +971,7 @@ function jitterLine(a: { x: number; y: number }, b: { x: number; y: number }, ma
   const segs = 4;
   for (let s = 1; s < segs; s++) {
     const t = s / segs;
-    pts.push({ x: a.x + (b.x - a.x) * t + rand(-mag, mag), y: a.y + (b.y - a.y) * t + rand(-mag, mag) });
+    pts.push({ x: a.x + (b.x - a.x) * t + randRange(-mag, mag), y: a.y + (b.y - a.y) * t + randRange(-mag, mag) });
   }
   pts.push(b);
   return pts;
@@ -1352,8 +1352,8 @@ export function castSpell(g: Game, id: SpellId): boolean {
     audio.spellFreeze();
     g.freezeT = 3.2;
     for (let i = 0; i < 40; i++) {
-      const p = posAt(g.map, Math.random() * g.map.total, rand(-20, 20));
-      g.particles.push({ x: p.x, y: p.y, vx: rand(-10, 10), vy: rand(-30, -10), life: rand(0.6, 1.4), max: 1.4, size: rand(1.4, 3), color: '#a5f3fc', type: 'snow' });
+      const p = posAt(g.map, rand() * g.map.total, randRange(-20, 20));
+      g.particles.push({ x: p.x, y: p.y, vx: randRange(-10, 10), vy: randRange(-30, -10), life: randRange(0.6, 1.4), max: 1.4, size: randRange(1.4, 3), color: '#a5f3fc', type: 'snow' });
     }
   } else {
     audio.spellTear();
@@ -1381,20 +1381,20 @@ export function update(g: Game, rawDt: number) {
     m.y += m.vy * dt;
     if (theme.weather === 'rain') {
       if (m.y > 712) {
-        m.y = rand(-24, -8);
-        m.x = Math.random() * 1320;
+        m.y = randRange(-24, -8);
+        m.x = rand() * 1320;
       }
     } else if (theme.weather === 'ash') {
       m.x += Math.sin(g.time * 2 + m.y * 0.05) * 12 * dt;
       if (m.y > 712) {
-        m.y = rand(-14, -4);
-        m.x = Math.random() * 1280;
+        m.y = randRange(-14, -4);
+        m.x = rand() * 1280;
       }
     } else {
       if (m.y < -8 || m.life <= 0) {
-        m.x = Math.random() * 1280;
+        m.x = rand() * 1280;
         m.y = 712;
-        m.life = rand(6, 14);
+        m.life = randRange(6, 14);
       }
       m.life -= dt * 0.1;
     }
@@ -1449,7 +1449,7 @@ export function update(g: Game, rawDt: number) {
       g.strikes.splice(i, 1);
       const e = g.enemies.find((x) => x.id === s.targetId && !x.dead && !(x.boss && x.ghost));
       if (e) {
-        g.bolts.push({ pts: jitterLine({ x: e.x + rand(-30, 30), y: -16 }, { x: e.x, y: e.y }, 14), life: 0.2, max: 0.2, color: '#fef08a' });
+        g.bolts.push({ pts: jitterLine({ x: e.x + randRange(-30, 30), y: -16 }, { x: e.x, y: e.y }, 14), life: 0.2, max: 0.2, color: '#fef08a' });
         applyDamage(g, e, s.dmg, null, true);
         burst(g, e.x, e.y, 6, '#fef08a', 'spark');
       }
@@ -1506,8 +1506,8 @@ export function update(g: Game, rawDt: number) {
       const burnSrc = g.towers.find((x) => x.id === e.burnOwner) ?? null;
       applyDamage(g, e, e.burnDps * dt, burnSrc, true, true);
       if (e.dead) continue;
-      if (Math.random() < 0.25) {
-        g.particles.push({ x: e.x + rand(-6, 6), y: e.y - rand(0, 8), vx: rand(-10, 10), vy: rand(-50, -24), life: 0.4, max: 0.4, size: rand(1.4, 2.6), color: '#fb923c', type: 'spark' });
+      if (rand() < 0.25) {
+        g.particles.push({ x: e.x + randRange(-6, 6), y: e.y - randRange(0, 8), vx: randRange(-10, 10), vy: randRange(-50, -24), life: 0.4, max: 0.4, size: randRange(1.4, 2.6), color: '#fb923c', type: 'spark' });
       }
     }
 
@@ -1533,7 +1533,7 @@ export function update(g: Game, rawDt: number) {
     if (e.kind === 'warp' && g.freezeT <= 0) {
       e.warpT -= dt;
       if (e.warpT <= 0) {
-        e.warpT = rand(2.4, 3.6);
+        e.warpT = randRange(2.4, 3.6);
         const jump = 78;
         burst(g, e.x, e.y, 10, '#e879f9', 'spark');
         g.particles.push({ x: e.x, y: e.y, vx: 0, vy: 0, life: 0.4, max: 0.4, size: e.radius * 1.6, color: '#e879f9', type: 'ring' });

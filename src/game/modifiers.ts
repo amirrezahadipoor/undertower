@@ -4,6 +4,7 @@
  * between waves the game offers a branching choice with real trade-offs.
  */
 
+import { rand } from './rng';
 export type ModId =
   | 'bloodmoon'
   | 'swarm'
@@ -82,12 +83,12 @@ export function rollModifier(wave: number): ModId | null {
   if (wave % 10 === 0) return null; // bosses get their own drama
   if (wave < 4) return null; // let players learn first
   const chance = Math.min(0.7, 0.28 + wave * 0.012);
-  if (Math.random() > chance) return null;
+  if (rand() > chance) return null;
   const pool: ModId[] = ['bloodmoon', 'swarm', 'armored', 'swift', 'gale', 'frenzy', 'fog', 'unstable'];
   if (wave >= 8) pool.push('eclipse');
   // bounty is a rare relief roll
-  if (Math.random() < 0.16) return 'bounty';
-  return pool[Math.floor(Math.random() * pool.length)];
+  if (rand() < 0.16) return 'bounty';
+  return pool[Math.floor(rand() * pool.length)];
 }
 
 /* ─────────────────────────────────────────────────────────── */
@@ -174,8 +175,8 @@ export const EVENTS: RandomEvent[] = [
 
 export function rollEvent(wave: number, seenIds: Set<string>): RandomEvent | null {
   if (wave < 3 || wave % 10 === 0) return null;
-  if (Math.random() > 0.3) return null;
+  if (rand() > 0.3) return null;
   const fresh = EVENTS.filter((e) => !seenIds.has(e.id));
   const pool = fresh.length ? fresh : EVENTS;
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(rand() * pool.length)];
 }

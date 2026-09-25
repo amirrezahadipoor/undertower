@@ -1,3 +1,4 @@
+import { safeR } from './renderSafe';
 import { ENEMIES } from './config';
 import type { Enemy, Pet } from './types';
 
@@ -286,7 +287,7 @@ export function drawEnemyNew(ctx: CanvasRenderingContext2D, e: Enemy, t: number)
       ctx.ellipse(r * 0.2, -r * 0.5, r * 0.14, r * 0.2, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(0, -r * 0.08, r * 0.1, r * 0.18 + Math.sin(t * 4) * 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, -r * 0.08, safeR(r * 0.1), safeR(r * 0.18 + Math.sin(t * 4) * 2), 0, 0, Math.PI * 2);
       ctx.fill();
       // candle
       ctx.fillStyle = '#e2e8f0';
@@ -294,7 +295,7 @@ export function drawEnemyNew(ctx: CanvasRenderingContext2D, e: Enemy, t: number)
       glow(ctx, r * 0.9 + 1.5, -r * 0.42, 9, '#a5b4fc', 0.8 + flick(t, e.wob) * 0.3);
       ctx.fillStyle = '#c7d2fe';
       ctx.beginPath();
-      ctx.ellipse(r * 0.9 + 1.5, -r * 0.44, 2, 3.4 + flick(t, e.wob), 0, 0, Math.PI * 2);
+      ctx.ellipse(r * 0.9 + 1.5, -r * 0.44, 2, safeR(3.4 + flick(t, e.wob)), 0, 0, Math.PI * 2);
       ctx.fill();
       break;
     }
@@ -651,7 +652,7 @@ function drawBoss(ctx: CanvasRenderingContext2D, e: Enemy, t: number) {
     ctx.ellipse(r * 0.24, -r * 0.35, r * 0.12, r * 0.22, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(0, r * 0.05, r * 0.13, r * 0.22 + Math.sin(t * 3) * 3, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, r * 0.05, safeR(r * 0.13), safeR(r * 0.22 + Math.sin(t * 3) * 3), 0, 0, Math.PI * 2);
     ctx.fill();
     // drifting hands
     for (const s of [-1, 1]) {

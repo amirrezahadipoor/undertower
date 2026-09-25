@@ -1,3 +1,4 @@
+import { safeR } from './renderSafe';
 import { ACTS, COLS, ENEMIES, H, ROWS, SYNERGIES, SYNERGY_DIST, TILE, TOWERS, W, posAt, tileCenter, tileKey } from './config';
 import type { ActTheme, Enemy, EnemyKind, MapData, PetKind, Tower, TowerKind } from './types';
 import { effTowerStats, makePet, type Game as G } from './engine';
@@ -1241,7 +1242,7 @@ export function enemyBodyLegacy(ctx: CanvasRenderingContext2D, e: Enemy, time: n
       ctx.ellipse(r * 0.25, -r * 0.05, r * 0.13, r * 0.22, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(0, r * 0.35, r * 0.12, r * 0.18 + Math.sin(time * 3) * 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, r * 0.35, safeR(r * 0.12), safeR(r * 0.18 + Math.sin(time * 3) * 2), 0, 0, Math.PI * 2);
       ctx.fill();
       // veils
       ctx.strokeStyle = 'rgba(226,232,240,0.35)';
