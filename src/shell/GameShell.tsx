@@ -525,7 +525,18 @@ export default function GameShell({ onRetry, onExit }: Props) {
       <main className="relative z-10 min-h-0 flex-1 overflow-hidden">
         <div ref={boardViewport} className="battle-viewport" dir="ltr" aria-label="میدان نبرد؛ روی زمین بزن و با کشیدن انگشت در نقشه حرکت کن">
           <div className={`battle-board relative ${zoomed ? 'battle-board-zoomed' : ''}`}>
-            <GameCanvas game={game} inputLocked={locked || exitConfirm} onHud={setHud} onEvent={handleEvent} onSel={setSel} />
+            <GameCanvas
+              game={game}
+              inputLocked={locked || exitConfirm}
+              onHud={(h) => {
+                setHud(h);
+                // adaptive music: heat follows the size of the on-screen threat
+                const threat = h.phase === 'combat' ? h.enemiesLeft / Math.max(10, h.wave * 3.2) : 0;
+                audio.setIntensity(Math.min(1, 0.22 + threat * 0.9 + (h.bossHp ? 0.35 : 0)));
+              }}
+              onEvent={handleEvent}
+              onSel={setSel}
+            />
             <div className="scanlines absolute inset-0 rounded-lg" />
             <div className="vignette absolute inset-0 rounded-lg" />
             {banner && <WaveBanner text={banner.text} sub={banner.sub} tone={banner.tone} />}

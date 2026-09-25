@@ -32,6 +32,8 @@ class AudioEngine {
   private mode: MusicMode = null;
   private lastTick = 0;
   private lastBlip = 0;
+  /** battle heat 0..1 — drives which generative layers play (adaptive music) */
+  private intensity = 0.5;
   muted = typeof localStorage !== 'undefined' && localStorage.getItem('et_muted') === '1';
 
   ensure() {
@@ -300,6 +302,11 @@ class AudioEngine {
 
   /* ── generative music ────────────────────────────────────── */
 
+  /** Update the battle heat (0 = quiet build phase … 1 = overloaded screen). Safe everywhere. */
+  setIntensity(v: number) {
+    this.intensity = Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.5;
+  }
+
   music(m: MusicMode) {
     this.ensure();
     if (m === this.mode) return;
@@ -360,11 +367,19 @@ class AudioEngine {
       }
       return;
     }
+    /* Adaptive layering — the track breathes with the battle:
+       heat < 0.35 (build/quiet)  → bass + soft arp only
+       heat ≥ 0.35                → snare heartbeat + saw bass enter
+       heat ≥ 0.55                → hi-hats double-time
+       heat ≥ 0.80 / boss         → octave arp doubles + the deep drone */
+    const heat = this.mode === 'boss' ? 1 : this.intensity;
     const bassPat = [0, 0, 12, 0, 3, 3, 15, 3, -2, -2, 10, -2, 3, 3, 15, 12];
     if (s % 2 === 0) {
       const iv = bassPat[(s / 2) % 16 | 0];
       this.tone(midi(A + iv), midi(A + iv), this.stepDur() * 1.8, 'square', 0.06, when, this.musicBus);
-      this.tone(midi(A - 12 + iv), midi(A - 12 + iv), this.stepDur() * 1.8, 'sawtooth', 0.05, when, this.musicBus);
+      if (heat >= 0.35) {
+        this.tone(midi(A - 12 + iv), midi(A - 12 + iv), this.stepDur() * 1.8, 'sawtooth', 0.05, when, this.musicBus);
+      }
     }
     const arpPat = [12, 15, 19, 24, 19, 15];
     if (this.mode === 'boss' ? true : s % 2 === 1) {
@@ -372,9 +387,12 @@ class AudioEngine {
       const vol = this.mode === 'boss' ? 0.045 : 0.035;
       this.tone(midi(A + 12 + n), midi(A + 12 + n), 0.12, 'triangle', vol, when, this.musicBus);
       this.tone(midi(A + 12 + n), midi(A + 12 + n), 0.12, 'triangle', vol * 0.4, when + this.stepDur() * 3, this.musicBus);
+      if (heat >= 0.8) {
+        this.tone(midi(A + 24 + n), midi(A + 24 + n), 0.1, 'sine', 0.03, when, this.musicBus);
+      }
     }
-    if (s % 2 === 1) this.noise(0.03, 0.02, 6000, 'highpass', when, this.musicBus);
-    if (s % 8 === 4) this.noise(0.12, 0.09, 900, 'bandpass', when, this.musicBus, 0.8);
+    if (s % 2 === 1 && heat >= 0.55) this.noise(0.03, 0.02, 6000, 'highpass', when, this.musicBus);
+    if (s % 8 === 4 && heat >= 0.35) this.noise(0.12, 0.09, 900, 'bandpass', when, this.musicBus, 0.8);
     if (this.mode === 'boss' && s % 32 === 0) {
       this.tone(midi(A - 24), midi(A - 24), 4.2, 'sawtooth', 0.07, when, this.musicBus);
       this.tone(midi(A - 24 + 1), midi(A - 24 + 1), 4.2, 'sawtooth', 0.05, when, this.musicBus);
