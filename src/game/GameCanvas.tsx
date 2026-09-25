@@ -27,6 +27,30 @@ interface Props {
 
 const SPELL_KEYS: Record<string, SpellId> = { q: 'pulse', w: 'frost', e: 'tear' };
 
+/**
+ * Subtle day/night cycle: every 10 waves the light travels
+ * day → dusk → night → dawn, then clears for the boss wave.
+ * Pure tint (no gameplay effect), skipped in Hell Mode which is always blood-lit.
+ */
+function drawDaylight(ctx: CanvasRenderingContext2D, wave: number, hell: boolean) {
+  if (hell) {
+    ctx.fillStyle = 'rgba(120, 20, 30, 0.07)';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    return;
+  }
+  const w = ((Math.max(1, wave) - 1) % 10) + 1;
+  if (w === 10) return; // boss waves stay crystal-clear
+  let tint: string | null = null;
+  if (w === 5) tint = 'rgba(255, 150, 60, 0.05)'; // غروب
+  else if (w === 6) tint = 'rgba(40, 55, 110, 0.09)';
+  else if (w === 7 || w === 8) tint = 'rgba(25, 35, 90, 0.13)'; // شب
+  else if (w === 9) tint = 'rgba(255, 120, 150, 0.06)'; // سپیده
+  if (tint) {
+    ctx.fillStyle = tint;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  }
+}
+
 export default function GameCanvas({ game, inputLocked, onHud, onEvent, onSel }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const lockedRef = useRef(inputLocked);
@@ -90,6 +114,7 @@ export default function GameCanvas({ game, inputLocked, onHud, onEvent, onSel }:
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.imageSmoothingEnabled = true;
         drawScene(ctx, game, bg);
+        drawDaylight(ctx, game.wave, game.hell);
 
         if (game.events.length) {
           const evs = game.events.splice(0, game.events.length);
