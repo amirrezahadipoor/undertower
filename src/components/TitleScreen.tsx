@@ -83,7 +83,7 @@ export default function TitleScreen({ best, onStart }: Props) {
         </div>
 
         <h1
-          className="text-5xl font-black leading-tight text-transparent sm:text-8xl"
+          className="font-display text-5xl leading-tight text-transparent sm:text-8xl"
           style={{
             backgroundImage: 'linear-gradient(180deg,#ecfeff 0%,#67e8f9 45%,#6366f1 100%)',
             backgroundClip: 'text',

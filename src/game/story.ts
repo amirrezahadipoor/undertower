@@ -11,13 +11,14 @@ export interface ScriptLine {
   text: string;
 }
 
-export const SPEAKERS: Record<Speaker, { name: string; color: string; img: string | null; blip: number }> = {
-  nebu: { name: 'نیبو', color: '#67e8f9', img: nebuImg, blip: 520 },
-  soft: { name: 'نیبو', color: '#a5f3fc', img: nebuSoftImg, blip: 440 },
-  king: { name: 'پادشاهِ خاموشی', color: '#c084fc', img: kingImg, blip: 150 },
-  narr: { name: '', color: '#e2e8f0', img: null, blip: 340 },
-  core: { name: 'قلب', color: '#5eead4', img: coreImg, blip: 720 },
-  sage: { name: 'سالگرد', color: '#fbbf24', img: sageImg, blip: 380 },
+/** هر شخصیت، علاوه بر صدای خودش، قلمِ خودش را هم دارد — لحنِ نوشتاریِ گفت‌وگو. */
+export const SPEAKERS: Record<Speaker, { name: string; color: string; img: string | null; blip: number; font: string }> = {
+  nebu: { name: 'نیبو', color: '#67e8f9', img: nebuImg, blip: 520, font: 'font-dialogue' },
+  soft: { name: 'نیبو', color: '#a5f3fc', img: nebuSoftImg, blip: 440, font: 'font-dialogue' },
+  king: { name: 'پادشاهِ خاموشی', color: '#c084fc', img: kingImg, blip: 150, font: 'font-nastaliq text-[15px] sm:text-xl' },
+  narr: { name: '', color: '#e2e8f0', img: null, blip: 340, font: 'font-naskh' },
+  core: { name: 'قلب', color: '#5eead4', img: coreImg, blip: 720, font: 'font-display text-base sm:text-xl' },
+  sage: { name: 'سالگرد', color: '#fbbf24', img: sageImg, blip: 380, font: 'font-naskh' },
 };
 
 /** Does this scene get the cinematic letterbox treatment? */

@@ -91,13 +91,13 @@ export default function Dialogue({ lines, choices, onDone }: Props) {
                 <div className="h-14 w-14 overflow-hidden border-2 bg-[#050508] sm:h-24 sm:w-24" style={{ borderColor: spk.color }}>
                   <img src={spk.img} alt={spk.name} className="pix anim-bob h-full w-full object-cover" draggable={false} />
                 </div>
-                <span className="text-xs font-bold sm:text-sm" style={{ color: spk.color }}>
+                <span className={`text-xs font-bold sm:text-sm ${spk.font.split(' ')[0]}`} style={{ color: spk.color }}>
                   {spk.name}
                 </span>
               </div>
             )}
             <div className="relative min-h-[5.5rem] flex-1 cursor-pointer sm:min-h-[6.5rem]" onClick={advance}>
-              <p aria-live="off" className="text-sm leading-7 text-slate-100 sm:text-lg sm:leading-9" style={{ textShadow: '0 2px 0 #000' }}>
+              <p aria-live="off" className={`${spk.font} text-sm text-slate-100 sm:text-lg`} style={{ textShadow: '0 2px 0 #000' }}>
                 {full.slice(0, chars)}
                 {!showChoices && <span className="anim-blink text-cyan-300">▍</span>}
               </p>

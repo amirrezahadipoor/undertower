@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 :root {
   color-scheme: dark;
@@ -22,6 +23,21 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
+}
+
+/* ── Persian typography system: هر لحن، یک قلم ─────────────────
+   Vazirmatn  → رابط کاربری (خنثی و خوانا)
+   Lalezar    → تیترها و کلمات کوبنده (حالت بازی آرکید)
+   Markazi    → گفت‌وگوی شخصیت‌های گرم (نیبو)
+   Naskh      → حکایت‌های کتابی (سالگرد، راویِ مکث‌دار)
+   Nastaliq   → شکوهِ پادشاهِ خاموشی و کارت‌های فصل */
+.font-display { font-family: "Lalezar", "Vazirmatn", sans-serif; letter-spacing: 0.01em; }
+.font-dialogue { font-family: "Markazi Text", "Vazirmatn", sans-serif; }
+.font-naskh { font-family: "Noto Naskh Arabic", "Vazirmatn", serif; }
+.font-nastaliq {
+  font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif;
+  line-height: 2.3;
+  font-weight: 400;
 }
 
 .game-shell {

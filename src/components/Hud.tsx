@@ -435,12 +435,12 @@ export function WaveBanner({ text, sub, tone }: { text: string; sub?: string; to
   return (
     <div className="pointer-events-none absolute inset-x-0 top-[26%] z-20 flex flex-col items-center gap-2">
       <div
-        className={`anim-banner text-5xl font-black tracking-widest sm:text-7xl ${tone === 'boss' ? 'text-rose-500' : 'text-slate-50'}`}
+        className={`anim-banner font-display text-5xl tracking-widest sm:text-7xl ${tone === 'boss' ? 'text-rose-500' : 'text-slate-50'}`}
         style={{ textShadow: tone === 'boss' ? '0 0 40px rgba(244,63,94,0.8), 0 6px 0 rgba(0,0,0,0.6)' : '0 0 40px rgba(103,232,249,0.5), 0 6px 0 rgba(0,0,0,0.6)' }}
       >
         {text}
       </div>
-      {sub && <div className={`anim-banner text-sm font-bold sm:text-base ${tone === 'boss' ? 'text-rose-300' : 'text-cyan-200'}`}>{sub}</div>}
+      {sub && <div className={`anim-banner font-naskh text-sm font-bold sm:text-base ${tone === 'boss' ? 'text-rose-300' : 'text-cyan-200'}`}>{sub}</div>}
     </div>
   );
 }

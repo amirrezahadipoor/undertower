@@ -43,8 +43,12 @@ export default function Ending({ kind, wave, kills, timeSec, onContinue, onMenu 
       const t = window.setTimeout(() => setPhase('credits'), 900);
       return () => window.clearTimeout(t);
     }
+    // narrator voice sample for each line of the epilogue
+    for (let i = 0; i < 3; i++) window.setTimeout(() => audio.blip('narr'), i * 90);
     const t = window.setTimeout(() => setIdx((i) => i + 1), 3400);
-    return () => window.clearTimeout(t);
+    return () => {
+      window.clearTimeout(t);
+    };
   }, [idx, phase, lines.length]);
 
   const dawn = kind === 'dawn';
@@ -66,7 +70,7 @@ export default function Ending({ kind, wave, kills, timeSec, onContinue, onMenu 
         <div className="absolute inset-x-0 bottom-[max(20px,env(safe-area-inset-bottom))] flex justify-center px-3 sm:bottom-[14vh] sm:px-6">
           <div className="dialogue-frame max-h-[72dvh] max-w-2xl overflow-y-auto p-3 sm:p-5">
             {lines.slice(0, Math.min(idx + 1, lines.length)).slice(-1).map((l, i) => (
-              <p key={`${idx}-${i}`} className="anim-rise text-base leading-8 text-slate-100 sm:text-lg sm:leading-9" style={{ textShadow: '0 2px 0 #000' }}>
+              <p key={`${idx}-${i}`} className="anim-rise font-naskh text-base text-slate-100 sm:text-lg" style={{ textShadow: '0 2px 0 #000' }}>
                 {l.text}
               </p>
             ))}

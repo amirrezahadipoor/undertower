@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Coins, Heart, Sparkles, Swords, Wand2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { SPEAKERS } from '../game/story';
@@ -12,6 +13,15 @@ const TONE_STYLE: Record<string, { border: string; bg: string; text: string; ico
 
 export default function EventCard({ event, onChoose, gold, lives }: { event: RandomEvent; onChoose: (i: number) => void; gold: number; lives: number }) {
   const spk = SPEAKERS[event.speaker];
+  // A short voice sample of the speaker, like a dialogue box opening.
+  useEffect(() => {
+    let i = 0;
+    const id = window.setInterval(() => {
+      audio.blip(event.speaker);
+      if (++i >= 4) window.clearInterval(id);
+    }, 55);
+    return () => window.clearInterval(id);
+  }, [event.speaker]);
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-2 sm:p-4">
       <div className="pointer-events-none fixed inset-0 bg-black/60 backdrop-blur-[2px]" />
@@ -28,13 +38,13 @@ export default function EventCard({ event, onChoose, gold, lives }: { event: Ran
                 <Sparkles size={11} className="text-amber-300" />
                 پیشامد
               </div>
-              <h3 className="text-lg font-black" style={{ color: spk.color }}>
+              <h3 className={`text-lg font-black ${spk.font.split(' ')[0]}`} style={{ color: spk.color }}>
                 {event.title}
               </h3>
             </div>
           </div>
 
-          <p className="mb-4 text-sm leading-7 text-slate-200" style={{ textShadow: '0 1px 0 #000' }}>
+          <p className={`${spk.font} mb-4 text-sm text-slate-200`} style={{ textShadow: '0 1px 0 #000' }}>
             {event.text}
           </p>
 

@@ -5,6 +5,19 @@
 type MusicMode = 'menu' | 'combat' | 'boss' | null;
 type SpeakerKey = 'nebu' | 'soft' | 'king' | 'narr' | 'core' | 'sage';
 
+/** Per-character voice design (waveform / register / texture), Undertale-style. */
+const VOICES: Record<
+  SpeakerKey,
+  { wave: OscillatorType; base: number; dur: number; vol: number; jitter: number; harm?: number; growl?: boolean; air?: boolean; detune?: boolean }
+> = {
+  nebu: { wave: 'square', base: 560, dur: 0.05, vol: 0.045, jitter: 0.13, harm: 2 }, // چاپلوژ و پرانرژی — بوقِ دوتاییِ روشن
+  soft: { wave: 'triangle', base: 430, dur: 0.06, vol: 0.05, jitter: 0.1, detune: true }, // نیبوی خسته و مهربان — گرم و دوتایی
+  king: { wave: 'sawtooth', base: 115, dur: 0.075, vol: 0.06, jitter: 0.08, growl: true }, // غرشِ کم‌بسامد + خش‌خش
+  narr: { wave: 'sine', base: 330, dur: 0.035, vol: 0.035, jitter: 0.06, air: true }, // راوی — نجوا با هوای توی‌گوش
+  core: { wave: 'sine', base: 740, dur: 0.05, vol: 0.045, jitter: 0.09, harm: 1.5 }, // قلبِ کریستالی — زنگِ نقره‌ای
+  sage: { wave: 'triangle', base: 380, dur: 0.065, vol: 0.05, jitter: 0.07, detune: true, air: true }, // سالگرد — گرم، کهنه، نفس‌دار
+};
+
 const midi = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 
 class AudioEngine {
@@ -119,16 +132,26 @@ class AudioEngine {
     this.tone(660, 880, 0.07, 'triangle', 0.12);
   }
 
+  /**
+   * Undertale-style dialogue voice: every character speaks with its own
+   * hand-tuned timbre — waveform, register, texture layers and articulation —
+   * so each dialogue reads as "heard", not merely read.
+   */
   blip(who: SpeakerKey) {
     this.ensure();
     const now = performance.now();
-    if (now - this.lastBlip < 24) return;
+    if (now - this.lastBlip < 26) return;
     this.lastBlip = now;
-    const base =
-      who === 'king' ? 130 : who === 'nebu' ? 540 : who === 'soft' ? 430 : who === 'core' ? 700 : who === 'sage' ? 380 : 330;
-    const f = base * (0.94 + Math.random() * 0.12);
-    const type: OscillatorType = who === 'king' ? 'sawtooth' : who === 'core' ? 'sine' : who === 'sage' ? 'triangle' : 'square';
-    this.tone(f, f * 0.92, 0.045, type, who === 'king' ? 0.05 : 0.04);
+    const v = VOICES[who];
+    const f = v.base * (1 - v.jitter + Math.random() * v.jitter * 2);
+    const bend = f * (who === 'nebu' ? 1.04 : 0.9); // nebu chirps UP, others settle down
+    this.tone(f, bend, v.dur, v.wave, v.vol);
+    if (v.harm) this.tone(f * v.harm, bend * v.harm, v.dur * 0.8, v.wave, v.vol * 0.35);
+    if (v.growl) this.noise(v.dur * 1.6, v.vol * 0.9, 320, 'lowpass');
+    if (v.air) this.noise(v.dur * 0.8, 0.012, 5200, 'highpass');
+    if (v.detune) {
+      this.tone(f * 1.008, bend * 1.008, v.dur, 'triangle', v.vol * 0.5);
+    }
   }
 
   shoot(kind: 'dart' | 'cannon' | 'frost' | 'tesla' | 'sniper' | 'burn') {

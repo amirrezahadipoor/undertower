@@ -23,6 +23,9 @@ const fa = (n: number) => n.toLocaleString('fa-IR');
 export default function GameOver({ wave, kills, earned, timeSec, best, isRecord, shards, onRetry, onMenu, onShop }: Props) {
   useEffect(() => {
     audio.music(null);
+    // nebu (tired) murmurs a few syllables of consolation
+    const ids = [0, 1, 2].map((i) => window.setTimeout(() => audio.blip('soft'), 700 + i * 160));
+    return () => ids.forEach((id) => window.clearTimeout(id));
   }, []);
 
   const mm = Math.floor(timeSec / 60);
@@ -51,9 +54,9 @@ export default function GameOver({ wave, kills, earned, timeSec, best, isRecord,
         <div className="dialogue-frame w-full p-4 text-right">
           <div className="flex items-start gap-3">
             <img src={nebuSoftImg} alt="نیبو" className="pix h-14 w-14 shrink-0 border-2 border-cyan-300/70 object-cover" />
-            <div className="space-y-2 text-sm leading-7 text-slate-200">
+            <div className="space-y-2 text-sm text-slate-200">
               {GAMEOVER.map((l, i) => (
-                <p key={i} className="anim-rise" style={{ animationDelay: `${0.4 + i * 0.55}s` }}>
+                <p key={i} className="anim-rise font-dialogue" style={{ animationDelay: `${0.4 + i * 0.55}s` }}>
                   {l.text}
                 </p>
               ))}
