@@ -46,6 +46,9 @@ jobs:
       - name: Patch native shell (landscape + fullscreen)
         run: node scripts/patch-android.mjs
 
+      - name: Generate launcher icons & splash from key art
+        run: npx @capacitor/assets generate --android --iconBackgroundColor '#04050c' --splashBackgroundColor '#04050c'
+
       - name: Sync web assets into the shell
         run: npx cap sync android
 
