@@ -271,6 +271,7 @@ export type Sel =
     };
 
 export interface HudInfo {
+  hell: boolean;
   gold: number;
   lives: number;
   wave: number;

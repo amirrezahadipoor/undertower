@@ -81,6 +81,12 @@ export function TopBar({ hud, muted, livesKey, locked, onSpeed, onTogglePause, o
     >
       {/* left: wave + act */}
       <div className="flex min-w-0 items-center gap-1 sm:gap-3">
+        {hud.hell && (
+          <span className="flex items-center gap-1 rounded-full border border-rose-500/60 bg-rose-600/25 px-2 py-0.5 text-[10px] font-black text-rose-200" title="مودِ دوزخ">
+            <Flame size={11} />
+            دوزخ
+          </span>
+        )}
         <img src={coreImg} alt="" className="pix anim-heart hidden h-7 w-7 object-contain sm:block" draggable={false} />
         <div className="leading-tight">
           <div className="whitespace-nowrap text-[12px] font-black text-slate-100 sm:text-sm">

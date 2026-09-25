@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 export default function App() {
   const [screen, setScreen] = useState<'title' | 'game'>('title');
   const [runKey, setRunKey] = useState(0);
+  const [hell, setHell] = useState(false);
   const [best, setBest] = useState(() => ({
     wave: Number(localStorage.getItem('et_best') ?? 0),
     souls: Number(localStorage.getItem('et_souls') ?? 0),
@@ -20,10 +21,21 @@ export default function App() {
   return (
     <ErrorBoundary label="دژِ ابدیت">
       {screen === 'title' ? (
-        <TitleScreen best={best} onStart={() => setScreen('game')} />
+        <TitleScreen
+          best={best}
+          onStart={() => {
+            setHell(false);
+            setScreen('game');
+          }}
+          onHellStart={() => {
+            setHell(true);
+            setScreen('game');
+          }}
+        />
       ) : (
         <GameShell
           key={runKey}
+          hell={hell}
           onRetry={() => setRunKey((k) => k + 1)}
           onExit={() => {
             refreshBest();

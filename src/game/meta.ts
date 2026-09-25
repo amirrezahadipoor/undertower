@@ -41,6 +41,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'mercy3', name: 'بخشندهٔ مرز', desc: 'در مجموع ۳ پیکره‌نورِ باس را آزاد کن.', reward: 6 },
   { id: 'dawn', name: 'سپیده‌دم', desc: 'پادشاهِ خاموشی را شکست بده و قلب را بشکن.', reward: 20 },
   { id: 'throne', name: 'پادشاهِ نور', desc: 'پادشاهِ خاموشی را شکست بده و تاج را بردار.', reward: 20 },
+  { id: 'hell30', name: 'مارشِ دوزخ', desc: 'در مودِ دوزخ از موج ۳۰ عبور کن.', reward: 15 },
 ];
 
 export interface RelicMods {

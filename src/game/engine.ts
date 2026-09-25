@@ -102,6 +102,8 @@ export interface Game {
   phase: Phase;
   speed: 1 | 2 | 3;
   paused: boolean;
+  /** opt-in Hell Mode — enemies ×1.45 hp/gold, half hearts, ×1.5 shards */
+  hell: boolean;
   time: number;
   act: number;
   freezeT: number;
@@ -206,6 +208,7 @@ export function createGame(mods: RelicMods = DEFAULT_MODS): Game {
     phase: 'build',
     speed: 1,
     paused: false,
+    hell: false,
     time: 0,
     act: 1,
     freezeT: 0,
@@ -254,8 +257,12 @@ export function createGame(mods: RelicMods = DEFAULT_MODS): Game {
   };
 }
 
-export function createGameWithPet(mods: RelicMods = DEFAULT_MODS): Game {
+export function createGameWithPet(mods: RelicMods = DEFAULT_MODS, hell = false): Game {
   const g = createGame(mods);
+  if (hell) {
+    g.hell = true;
+    g.lives = Math.max(5, Math.round((ECON.startLives + mods.startLives) * 0.5));
+  }
   const save = getPetSave();
   if (save.active && save.unlocked.includes(save.active)) setPet(g, save.active);
   return g;
@@ -624,7 +631,7 @@ function spawnEnemy(g: Game, kind: Enemy['kind'], dist = 0, lat?: number) {
   const mod = g.mod ? MODS[g.mod] : null;
   const cycle = cycleOf(w);
   const cycMult = Math.pow(ECON.cycleHp, cycle - 1);
-  let hp = def.hp * ECON.hpMult(Math.min(w, 60) + (cycle - 1) * 12) * cycMult;
+  let hp = def.hp * ECON.hpMult(Math.min(w, 60) + (cycle - 1) * 12) * cycMult * (g.hell ? 1.45 : 1);
   let speed = def.speed * ECON.speedMult(w);
   let variant: Enemy['variant'] = null;
   let radius = def.radius;
@@ -652,7 +659,8 @@ function spawnEnemy(g: Game, kind: Enemy['kind'], dist = 0, lat?: number) {
   }
   let armor = def.armor + (kind === 'boss' ? bossTier(w) * 2 + (variant === 'king' ? 6 : 0) : elite ? 2 : 0) + (cycle - 1) * 2;
   let slowResist = variant === 'king' ? 0.85 : def.slowResist;
-  let gold = def.gold * ECON.goldMult(Math.min(w, 60)) * (elite ? 1.6 : 1) * Math.pow(ECON.cycleGold, cycle - 1) * (variant === 'king' ? 3 : 1);
+  let gold =
+    def.gold * ECON.goldMult(Math.min(w, 60)) * (elite ? 1.6 : 1) * Math.pow(ECON.cycleGold, cycle - 1) * (variant === 'king' ? 3 : 1) * (g.hell ? 1.45 : 1);
   if (mod && kind !== 'boss') {
     if (mod.hp) hp *= mod.hp;
     if (mod.speed) speed *= mod.speed;
@@ -1788,6 +1796,7 @@ export function update(g: Game, rawDt: number) {
     g.gold += bonus + interest;
     g.earned += bonus + interest;
     if (g.gold >= 1000) g.events.push({ type: 'achCheck', achId: 'rich1000' });
+    if (g.hell && g.wave >= 30) g.events.push({ type: 'achCheck', achId: 'hell30' });
     if (g.wave % 5 === 0) g.lives += g.mods.heal5;
     if (g.dmgBuffWaves > 0) {
       g.dmgBuffWaves--;
@@ -1808,6 +1817,7 @@ export function collectHud(g: Game): HudInfo {
   const boss = g.bossId !== null ? g.enemies.find((e) => e.id === g.bossId) : null;
   const alive = g.enemies.filter((e) => !e.dead).length;
   return {
+    hell: g.hell,
     gold: g.gold,
     lives: g.lives,
     wave: g.wave,

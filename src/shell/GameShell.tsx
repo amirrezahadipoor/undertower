@@ -55,6 +55,8 @@ import type { HudInfo, PetKind, Sel, TowerKind } from '../game/types';
 interface Props {
   onRetry: () => void;
   onExit: () => void;
+  /** opt-in Hell Mode (chosen on the title screen) */
+  hell?: boolean;
 }
 
 interface OverStats {
@@ -73,11 +75,11 @@ interface DialogState {
   onChoice?: (i: number) => void;
 }
 
-export default function GameShell({ onRetry, onExit }: Props) {
+export default function GameShell({ onRetry, onExit, hell = false }: Props) {
   const gameRef = useRef<Game | null>(null);
   if (!gameRef.current) {
     seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
-    gameRef.current = createGameWithPet(relicMods());
+    gameRef.current = createGameWithPet(relicMods(), hell);
   }
   const game = gameRef.current;
 
@@ -381,7 +383,7 @@ export default function GameShell({ onRetry, onExit }: Props) {
         saveBest(e.wave ?? 0);
         saveSouls();
         clearSavedRun();
-        const shards = shardsEarned(e.wave ?? 1);
+        const shards = Math.round(shardsEarned(e.wave ?? 1) * (hell ? 1.5 : 1));
         addShards(shards);
         audio.music(null);
         const kills = game.kills;

@@ -6,13 +6,17 @@ import Codex from './Codex';
 import { audio } from '../game/audio';
 import { getShards } from '../game/meta';
 import { downloadProjectZip } from '../utils/projectZip';
+import { haptic } from '../utils/mobile';
 
 interface Props {
   best: { wave: number; souls: number };
   onStart: () => void;
+  onHellStart: () => void;
 }
 
-export default function TitleScreen({ best, onStart }: Props) {
+const fa = (n: number) => Math.round(n).toLocaleString('fa-IR');
+
+export default function TitleScreen({ best, onStart, onHellStart }: Props) {
   const [shop, setShop] = useState(false);
   const [codex, setCodex] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -111,6 +115,26 @@ export default function TitleScreen({ best, onStart }: Props) {
             <Play size={20} className="transition group-hover:scale-125" />
             آغازِ دفاع
           </button>
+          {best.wave >= 30 ? (
+            <button
+              onClick={() => {
+                audio.ensure();
+                audio.error();
+                haptic([20, 40, 20]);
+                onHellStart();
+              }}
+              className="mobile-touch anim-pulse-glow flex min-h-12 items-center gap-2 rounded-xl border-2 border-rose-500/70 bg-gradient-to-l from-rose-600/35 to-orange-500/20 px-5 text-sm font-black text-rose-100 transition hover:from-rose-600/50 active:scale-95"
+              title="دشمنان ۴۵٪ قوی‌تر و پول‌دارتر؛ قلب نیمی از جان را دارد؛ روح‌ها ۱.۵ برابر"
+            >
+              <Skull size={17} />
+              آغاز در دوزخ
+            </button>
+          ) : (
+            <span className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-bold text-slate-500">
+              <Skull size={14} />
+              دوزخ: با رسیدن به موج ۳۰ باز می‌شود ({fa(best.wave)}/۳۰)
+            </span>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
