@@ -55,6 +55,64 @@ export interface RelicMods {
   heal5: number;
   autoCrystal: boolean;
   spellCdMult: number;
+  /** pillar «بهرهٔ دوبل»: extra interest cap on top of ECON.interestCap */
+  interestCapBonus: number;
+}
+
+/* ── ستون‌های معمار: درختِ مهارتِ دائمی با ۳ شاخه ──────────────────
+   هر شاخه دو سنگ دارد؛ سنگِ دوم پس از سنگِ اول باز می‌شود. */
+
+export type PillarBranch = 'wealth' | 'bulwark' | 'pulse';
+
+export interface Pillar {
+  id: string;
+  branch: PillarBranch;
+  tier: 1 | 2;
+  name: string;
+  desc: string;
+  flavor: string;
+  cost: number;
+}
+
+export const PILLAR_BRANCHES: Record<PillarBranch, { name: string; color: string }> = {
+  wealth: { name: 'خزانه‌داری', color: '#fbbf24' },
+  bulwark: { name: 'سنگ‌بنا', color: '#67e8f9' },
+  pulse: { name: 'نبض', color: '#c084fc' },
+};
+
+export const PILLARS: Pillar[] = [
+  { id: 'p-seed', branch: 'wealth', tier: 1, name: 'بذرِ طلا', desc: 'با ۴۰ طلای بیشتر بیدار شو.', flavor: 'اولین سنگ زیرِ هر گنجی.', cost: 4 },
+  { id: 'p-interest', branch: 'wealth', tier: 2, name: 'بهرهٔ دوبل', desc: 'سقفِ سودِ بانکی از ۶۰ به ۱۲۰ می‌رسد.', flavor: 'پولِ خفته هم می‌تواند رویش کند.', cost: 7 },
+  { id: 'p-lives', branch: 'bulwark', tier: 1, name: 'سنگِ بنا', desc: 'قلب با ۳ جانِ بیشتر شروع می‌کند.', flavor: 'سنگی که ترک برنمی‌دارد.', cost: 5 },
+  { id: 'p-dmg', branch: 'bulwark', tier: 2, name: 'شعلهٔ پایدار', desc: 'برج‌ها ۶٪ آسیب بیشتر می‌زنند.', flavor: 'آتشی که باد آن را نمی‌خواباند.', cost: 8 },
+  { id: 'p-cd', branch: 'pulse', tier: 1, name: 'ضربانِ تند', desc: 'کول‌داونِ توان‌های قلب ۱۰٪ کوتاه‌تر.', flavor: 'قلب یاد گرفته عجله کند.', cost: 5 },
+  { id: 'p-crit', branch: 'pulse', tier: 2, name: 'شمشیرِ نور', desc: '۵٪ شانسِ ضربهٔ دوبرابر.', flavor: 'نوری که برش می‌زند، نه می‌سوزاند.', cost: 8 },
+];
+
+const getPillars = (): string[] => {
+  try {
+    return JSON.parse(read('et_pillars', '[]')) as string[];
+  } catch {
+    return [];
+  }
+};
+
+export const hasPillar = (id: string) => getPillars().includes(id);
+
+/** Tier-2 stones need their tier-1 sibling. */
+export const pillarLocked = (id: string): boolean => {
+  const p = PILLARS.find((x) => x.id === id);
+  if (!p || p.tier === 1) return false;
+  const sibling = PILLARS.find((x) => x.branch === p.branch && x.tier === 1);
+  return !!sibling && !hasPillar(sibling.id);
+};
+
+export function buyPillar(id: string): boolean {
+  const p = PILLARS.find((x) => x.id === id);
+  if (!p || hasPillar(id) || pillarLocked(id) || getShards() < p.cost) return false;
+  addShards(-p.cost);
+  localStorage.setItem('et_pillars', JSON.stringify([...getPillars(), id]));
+  return true;
 }
 
 const read = (k: string, d: string) => (typeof localStorage === 'undefined' ? d : localStorage.getItem(k) ?? d);
@@ -112,7 +170,7 @@ export const bumpMercy = () => {
 
 export function relicMods(): RelicMods {
   const has = hasRelic;
-  return {
+  const mods: RelicMods = {
     startGold: has('war-chest') ? 60 : 0,
     startLives: has('heart-knot') ? 5 : 0,
     costMult: has('nebu-apron') ? 0.92 : 1,
@@ -123,7 +181,16 @@ export function relicMods(): RelicMods {
     heal5: has('pact') ? 2 : 1,
     autoCrystal: has('soul-magnet'),
     spellCdMult: has('chrono-heart') ? 0.85 : 1,
+    interestCapBonus: 0,
   };
+  // ستون‌های معمار روی رلیک‌ها سوار می‌شوند
+  if (hasPillar('p-seed')) mods.startGold += 40;
+  if (hasPillar('p-interest')) mods.interestCapBonus += 60;
+  if (hasPillar('p-lives')) mods.startLives += 3;
+  if (hasPillar('p-dmg')) mods.dmgMult *= 1.06;
+  if (hasPillar('p-cd')) mods.spellCdMult *= 0.9;
+  if (hasPillar('p-crit')) mods.critCh += 0.05;
+  return mods;
 }
 
 /** Shards granted at the end of a run. */

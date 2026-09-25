@@ -77,6 +77,7 @@ const DEFAULT_MODS: RelicMods = {
   heal5: 1,
   autoCrystal: false,
   spellCdMult: 1,
+  interestCapBonus: 0,
 };
 
 export interface ScheduledStrike {
@@ -1791,7 +1792,7 @@ export function update(g: Game, rawDt: number) {
     g.phase = 'build';
     g.strikes = [];
     const bonus = ECON.bonus(g.wave);
-    let interest = Math.min(ECON.interestCap, Math.floor(g.gold * ECON.interestRate));
+    let interest = Math.min(ECON.interestCap + (g.mods.interestCapBonus ?? 0), Math.floor(g.gold * ECON.interestRate));
     if (g.pet && g.pet.kind === 'wisp') interest += 6 + g.pet.level * 2;
     g.gold += bonus + interest;
     g.earned += bonus + interest;

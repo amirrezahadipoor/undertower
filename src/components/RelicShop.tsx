@@ -1,8 +1,9 @@
 import mirrorImg from '../assets/mirror.jpg';
 import { useState } from 'react';
-import { Check, ChefHat, Clock, Coins, Eye, Gem, Handshake, Heart, Magnet, Snowflake, Swords, Wand2, X, Zap } from 'lucide-react';
+import { Check, ChefHat, Clock, Coins, Eye, Gem, Handshake, Heart, Magnet, Snowflake, Sparkle, Swords, Wand2, X, Zap } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { RELICS, buyRelic, getRelics, getShards } from '../game/meta';
+import { PILLARS, PILLAR_BRANCHES, RELICS, buyPillar, buyRelic, getRelics, getShards, hasPillar, pillarLocked } from '../game/meta';
+import type { Pillar, PillarBranch } from '../game/meta';
 import { audio } from '../game/audio';
 
 const RICON: Record<string, LucideIcon> = {
@@ -99,7 +100,89 @@ export default function RelicShop({ onClose }: { onClose: () => void }) {
         <p className="mt-4 text-center text-[11px] text-slate-500">
           خرده‌خاطره‌ها از آزاد کردن روح‌ها و فروپاشیدن باس‌ها جمع می‌شوند — حتی در شکست.
         </p>
+
+        {/* ── ستون‌های معمار: درختِ مهارتِ سه‌شاخه ── */}
+        <h3 className="font-display mt-6 flex items-center gap-2 text-base text-cyan-100">
+          <Sparkle size={16} className="text-cyan-300" />
+          ستون‌های معمار
+        </h3>
+        <p className="mb-3 text-xs leading-6 text-slate-400">
+          سه ستونِ حافظه؛ هر ستون دو سنگ دارد و سنگِ دوم پس از سنگِ اول جان می‌گیرد. این‌ها مالِ ابدِ معمارند.
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {(Object.keys(PILLAR_BRANCHES) as PillarBranch[]).map((branch) => {
+            const meta = PILLAR_BRANCHES[branch];
+            const stones = PILLARS.filter((p) => p.branch === branch);
+            return (
+              <div key={branch} className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+                <div className="flex items-center justify-center gap-1.5 text-xs font-black" style={{ color: meta.color }}>
+                  <Sparkle size={12} />
+                  {meta.name}
+                </div>
+                <div className="relative flex flex-1 flex-col justify-center gap-2">
+                  <span className="absolute inset-y-2 right-1/2 w-px translate-x-1/2 bg-white/10" aria-hidden />
+                  {stones.map((stone) => (
+                    <PillarStone key={stone.id} stone={stone} shards={shards} onBuy={() => force((v) => v + 1)} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
+  );
+}
+
+function PillarStone({ stone, shards, onBuy }: { stone: Pillar; shards: number; onBuy: () => void }) {
+  const owned = hasPillar(stone.id);
+  const locked = pillarLocked(stone.id);
+  const afford = shards >= stone.cost;
+  const branchColor = PILLAR_BRANCHES[stone.branch].color;
+  return (
+    <button
+      type="button"
+      disabled={owned || locked || !afford}
+      onClick={() => {
+        if (buyPillar(stone.id)) {
+          audio.apex();
+          onBuy();
+        } else {
+          audio.error();
+        }
+      }}
+      title={locked ? 'اول سنگِ بالاییِ همین ستون را باز کن' : stone.desc}
+      className={`mobile-touch relative z-10 flex items-start gap-2 rounded-lg border p-2.5 text-right transition active:scale-[0.98] ${
+        owned
+          ? 'border-emerald-400/40 bg-emerald-400/10'
+          : locked
+            ? 'border-slate-800 bg-slate-900/50 opacity-45'
+            : afford
+              ? 'bg-[#0a0d1c]/80 hover:brightness-125'
+              : 'border-slate-800 bg-slate-900/40 opacity-60'
+      }`}
+      style={!owned && !locked && afford ? { borderColor: `${branchColor}77` } : undefined}
+    >
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] font-black ${
+          owned ? 'bg-emerald-400/20 text-emerald-200' : locked ? 'bg-black/40 text-slate-600' : 'text-slate-200'
+        }`}
+        style={!owned && !locked ? { background: `${branchColor}26`, color: branchColor } : undefined}
+      >
+        {owned ? <Check size={14} /> : locked ? '🔒' : `★${stone.tier === 1 ? '۱' : '۲'}`}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center justify-between gap-2">
+          <span className="text-[13px] font-extrabold text-slate-100">{stone.name}</span>
+          {!owned && (
+            <span className={`flex shrink-0 items-center gap-1 text-[11px] font-bold ${afford && !locked ? 'text-cyan-300' : 'text-slate-500'}`}>
+              <Gem size={10} />
+              {stone.cost.toLocaleString('fa-IR')}
+            </span>
+          )}
+        </span>
+        <span className="block text-[11px] font-bold leading-5 text-slate-300">{stone.desc}</span>
+      </span>
+    </button>
   );
 }
