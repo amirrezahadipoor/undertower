@@ -9,9 +9,12 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "apk": "npm run build && npx cap add android && node scripts/patch-android.mjs && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "cap:sync": "npx cap sync android"
   },
   "dependencies": {
+    "@capacitor/core": "^7.6.9",
     "clsx": "2.1.1",
     "jszip": "^3.10.2",
     "lucide-react": "^1.48.0",
@@ -20,6 +23,8 @@
     "tailwind-merge": "3.4.0"
   },
   "devDependencies": {
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/cli": "^7.6.9",
     "@tailwindcss/vite": "4.1.17",
     "@types/node": "22.19.17",
     "@types/react": "19.2.7",

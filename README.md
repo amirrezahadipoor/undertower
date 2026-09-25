@@ -41,6 +41,10 @@ The **Download ZIP** button on the title screen packages the complete, runnable 
 
 From the project root you can also generate the same archive locally: `node scripts/create-zip.mjs` → `eternity-defense-source.zip`.
 
+## Android APK
+
+The repo ships a GitHub Actions workflow (`.github/workflows/apk.yml`) that builds an installable **debug APK** on every `v*` tag (or manually via *Run workflow*): tests → single-file web build → Capacitor Android shell (landscape-locked, fullscreen) → Gradle `assembleDebug`. The APK is uploaded as the `EternityDefense-APK` artifact. Locally the same pipeline runs with `npm run apk` (requires Android SDK + JDK 21).
+
 ## Roadmap
 
 See [ROADMAP.md](./ROADMAP.md) — the staged path from "polished indie" toward AAA: rendering, content, netcode-safe leaderboards and tooling. Completed items are checked off as they ship.

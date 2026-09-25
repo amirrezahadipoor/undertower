@@ -1,0 +1,12 @@
+{
+  "appId": "com.eternitydefense.game",
+  "appName": "دژِ ابدیت",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#04050c",
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

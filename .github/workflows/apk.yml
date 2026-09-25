@@ -1,0 +1,74 @@
+name: APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  apk:
+    name: Build Android APK (debug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-cap7-v1
+          restore-keys: gradle-cap7-v1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test (engine + balance guard-rails)
+        run: npm test
+
+      - name: Build web (single-file bundle)
+        run: npm run build
+
+      - name: Add Android platform (Capacitor)
+        run: npx cap add android
+
+      - name: Patch native shell (landscape + fullscreen)
+        run: node scripts/patch-android.mjs
+
+      - name: Sync web assets into the shell
+        run: npx cap sync android
+
+      - name: Ensure Android SDK components
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" >/dev/null 2>&1 || true
+
+      - name: Build APK (assembleDebug)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/EternityDefense-debug.apk
+          ls -la out/
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EternityDefense-APK
+          path: out/EternityDefense-debug.apk
+          retention-days: 30
